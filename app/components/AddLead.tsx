@@ -1,0 +1,395 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+
+interface AddLeadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  // We allow passing a specific default type (e.g., force 'buyer' if on Buyers page)
+  forcedType?: 'buyer' | 'seller' | 'tenant' | 'landlord';
+  department?: 'sales' | 'rentals' | 'all';
+}
+
+export default function AddLeadModal({ isOpen, onClose, forcedType, department = 'all' }: AddLeadModalProps) {
+  
+  // --- STATE FOR "ALL" WINDOW LOGIC ---
+  const [selectedDept, setSelectedDept] = useState<'sales' | 'rentals' | null>(
+    department === 'all' ? null : department
+  );
+
+  // Default Role based on department
+  const [role, setRole] = useState<'buyer' | 'seller' | 'tenant' | 'landlord'>(
+    forcedType || (department === 'rentals' ? 'tenant' : 'buyer')
+  );
+
+  // Toggle for "Same as above" logic
+  const [useSamePhone, setUseSamePhone] = useState(false);
+
+  // Form Data
+  const [formData, setFormData] = useState({
+    name: '',
+    status: 'new',
+    phone: '',
+    whatsapp: '', 
+    location: '',
+    budget: '', 
+    demand: '',
+    propertyType: 'House',
+    size: '',
+    bedrooms: '',
+    bathrooms: '',
+    floors: '',
+    features: {
+      hasBasement: false,
+      isCorner: false,
+      isParkFacing: false,
+      isMainRoad: false,
+      hasServantQuarter: false
+    },
+    notes: ''
+  });
+
+  // Reset when opening
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedDept(department === 'all' ? null : department);
+      setRole(forcedType || (department === 'rentals' ? 'tenant' : 'buyer'));
+      setUseSamePhone(false);
+      setFormData({
+        name: '', status: 'new', phone: '', whatsapp: '', location: '', budget: '', demand: '',
+        propertyType: 'House', size: '', bedrooms: '', bathrooms: '', floors: '',
+        features: { hasBasement: false, isCorner: false, isParkFacing: false, isMainRoad: false, hasServantQuarter: false },
+        notes: ''
+      });
+    }
+  }, [isOpen, department, forcedType]);
+
+  // Sync WhatsApp
+  useEffect(() => {
+    if (useSamePhone) {
+      setFormData(prev => ({ ...prev, whatsapp: prev.phone }));
+    }
+  }, [formData.phone, useSamePhone]);
+
+  const toggleFeature = (key: string) => {
+    setFormData(prev => ({
+      ...prev,
+      features: { ...prev.features, [key]: !prev.features[key as keyof typeof prev.features] }
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // --- VALIDATION CHECKS ---
+    if (!formData.name.trim()) {
+      alert("Please enter the Full Name.");
+      return;
+    }
+    if (!formData.phone.trim()) {
+      alert("Please enter the Primary Call number.");
+      return;
+    }
+    if (!formData.propertyType.trim()) {
+      alert("Please select or enter a Property Type.");
+      return;
+    }
+    // Check Budget or Demand depending on role
+    const priceValue = ['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand;
+    if (!priceValue?.trim()) {
+      alert("Please enter the Budget/Demand price.");
+      return;
+    }
+
+    // Prepare final object
+    const finalData = { ...formData, type: role };
+    console.log("Saving Full Lead:", finalData); 
+    
+    alert(`${role.toUpperCase()} Lead Added Successfully!`);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  // --- STEP 1: DEPARTMENT SELECTOR ---
+  if (department === 'all' && !selectedDept) {
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in">
+        <div className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden p-6 animate-in slide-in-from-bottom-10 sm:zoom-in-95">
+          
+          <div className="mb-6">
+            <h3 className="font-bold text-xl text-gray-900">Add New Lead</h3>
+            <p className="text-sm text-gray-500 mt-1">Select the department to continue</p>
+          </div>
+
+          <div className="space-y-3">
+            {/* Sales Card */}
+            <button 
+              onClick={() => { setSelectedDept('sales'); setRole('buyer'); }}
+              className="w-full flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all group text-left active:scale-[0.98]"
+            >
+              <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              </div>
+              <div className="ml-4 flex-1">
+                 <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Sales Department</h4>
+                 <p className="text-xs text-gray-500 mt-0.5">Buying & Selling Properties</p>
+              </div>
+              <div className="text-gray-300 group-hover:text-blue-500 transition-colors">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </div>
+            </button>
+
+            {/* Rentals Card */}
+            <button 
+              onClick={() => { setSelectedDept('rentals'); setRole('tenant'); }}
+              className="w-full flex items-center p-4 bg-white border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-md transition-all group text-left active:scale-[0.98]"
+            >
+              <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              </div>
+              <div className="ml-4 flex-1">
+                 <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">Rentals Department</h4>
+                 <p className="text-xs text-gray-500 mt-0.5">Tenants & Landlords</p>
+              </div>
+              <div className="text-gray-300 group-hover:text-indigo-500 transition-colors">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </div>
+            </button>
+          </div>
+
+          <button onClick={onClose} className="w-full mt-6 py-3 text-sm font-semibold text-gray-400 hover:text-gray-900 transition-colors">Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- STEP 2: THE FORM ---
+  const isSales = selectedDept === 'sales' || ['buyer', 'seller'].includes(role);
+  const themeBtn = isSales ? 'bg-blue-600 hover:bg-blue-700' : 'bg-indigo-600 hover:bg-indigo-700';
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in">
+      <div className="bg-white w-full h-[90vh] sm:h-auto sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-10">
+        
+        {/* Header */}
+        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
+          <div>
+            <h3 className="font-bold text-lg text-gray-900">Add Lead</h3>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{isSales ? 'Sales Dept' : 'Rentals Dept'}</p>
+          </div>
+          <button onClick={onClose} className="bg-white p-1 rounded-full text-gray-500 hover:text-gray-800 shadow-sm border border-gray-200">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        {/* Scrollable Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto flex-1">
+          
+          {/* ROLE TOGGLE */}
+          <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-lg shrink-0 border border-gray-200">
+             <button type="button" 
+               onClick={() => setRole(isSales ? 'buyer' : 'tenant')}
+               className={`py-2.5 text-xs font-bold rounded-md transition-all shadow-sm ${role === (isSales ? 'buyer' : 'tenant') ? 'bg-white text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
+               {isSales ? 'BUYER' : 'TENANT'}
+             </button>
+             <button type="button"
+               onClick={() => setRole(isSales ? 'seller' : 'landlord')}
+               className={`py-2.5 text-xs font-bold rounded-md transition-all shadow-sm ${role === (isSales ? 'seller' : 'landlord') ? 'bg-white text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
+               {isSales ? 'SELLER' : 'LANDLORD'}
+             </button>
+          </div>
+
+          {/* 1. Basic Info */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Basic Info</h4>
+            
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Full Name <span className="text-red-500">*</span></label>
+              <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+                value={formData.name} 
+                onChange={(e) => setFormData({...formData, name: e.target.value})} 
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Location Preference</label>
+              <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+                value={formData.location} 
+                onChange={(e) => setFormData({...formData, location: e.target.value})} 
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Status</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none bg-white" 
+                value={formData.status} 
+                onChange={(e) => setFormData({...formData, status: e.target.value})}
+              >
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="interested">Interested</option>
+                <option value="negotiation">Negotiation</option>
+                <option value="closed">Closed</option>
+                <option value="dead">Dead</option>
+              </select>
+            </div>
+          </div>
+
+          {/* 2. Contact Details */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Contact Details</h4>
+            
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Primary Call <span className="text-red-500">*</span></label>
+              <input type="tel" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+                placeholder="0300-1234567"
+                value={formData.phone} 
+                onChange={(e) => setFormData({...formData, phone: e.target.value})} 
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-xs font-semibold text-gray-500 uppercase">WhatsApp</label>
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" className="w-3 h-3 text-blue-600 rounded" 
+                    checked={useSamePhone} 
+                    onChange={(e) => setUseSamePhone(e.target.checked)} 
+                  />
+                  <span className="text-[10px] text-gray-500 font-medium">Same as above</span>
+                </label>
+              </div>
+              <input type="tel" className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none ${useSamePhone ? 'bg-gray-100 text-gray-500' : ''}`} 
+                placeholder="0300-1234567"
+                value={formData.whatsapp || formData.phone} 
+                onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+                disabled={useSamePhone}
+              />
+            </div>
+          </div>
+
+          {/* 3. Property Details */}
+          <div className="space-y-3">
+             <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Property Details</h4>
+             
+             <div className="grid grid-cols-2 gap-3">
+               <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase">Property Type <span className="text-red-500">*</span></label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 outline-none bg-white" 
+                     value={formData.propertyType} 
+                     onChange={(e) => setFormData({...formData, propertyType: e.target.value})}
+                  >
+                     <option value="House">House</option>
+                     <option value="Portion">Portion</option>
+                     <option value="Flat">Flat</option>
+                     <option value="Plot">Plot</option>
+                     <option value="Commercial">Commercial</option>
+                  </select>
+               </div>
+               <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase">Size</label>
+                  <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 outline-none" 
+                    placeholder="e.g. 10 Marla" 
+                    value={formData.size} 
+                    onChange={(e) => setFormData({...formData, size: e.target.value})} 
+                  />
+               </div>
+             </div>
+             
+             <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase">
+                  {['buyer', 'tenant'].includes(role) ? 'Max Budget' : 'Demand Price'} <span className="text-red-500">*</span>
+                </label>
+                <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 font-semibold outline-none" 
+                    value={['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand} 
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        if(['buyer', 'tenant'].includes(role)) setFormData({...formData, budget: val, demand: ''});
+                        else setFormData({...formData, demand: val, budget: ''});
+                    }} 
+                />
+             </div>
+
+             <div className="grid grid-cols-3 gap-3">
+                 <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Floors</label>
+                    <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none" 
+                      value={formData.floors} onChange={(e) => setFormData({...formData, floors: e.target.value})} 
+                    />
+                 </div>
+                 <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Beds</label>
+                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none" 
+                      value={formData.bedrooms} onChange={(e) => setFormData({...formData, bedrooms: e.target.value})} 
+                    />
+                 </div>
+                 <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Baths</label>
+                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none" 
+                      value={formData.bathrooms} onChange={(e) => setFormData({...formData, bathrooms: e.target.value})} 
+                    />
+                 </div>
+             </div>
+          </div>
+
+          {/* 4. Features (Checkboxes) */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Features</h4>
+            <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
+                  <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={formData.features.hasBasement}
+                    onChange={() => toggleFeature('hasBasement')}
+                  />
+                  <span className="text-sm text-gray-700">Basement</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
+                  <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={formData.features.isCorner}
+                    onChange={() => toggleFeature('isCorner')}
+                  />
+                  <span className="text-sm text-gray-700">Corner</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
+                  <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={formData.features.isParkFacing}
+                    onChange={() => toggleFeature('isParkFacing')}
+                  />
+                  <span className="text-sm text-gray-700">Park Facing</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
+                  <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={formData.features.isMainRoad}
+                    onChange={() => toggleFeature('isMainRoad')}
+                  />
+                  <span className="text-sm text-gray-700">Main Road</span>
+                </label>
+            </div>
+          </div>
+
+          {/* 5. Notes */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Notes</h4>
+            <textarea className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 h-24 focus:ring-2 focus:ring-blue-500 outline-none resize-none" 
+              placeholder="Add detailed requirements..." 
+              value={formData.notes} 
+              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+            ></textarea>
+          </div>
+
+          {/* Footer Action */}
+          <div className="pt-2">
+             <button type="submit" className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-colors active:scale-[0.98] ${themeBtn}`}>
+               Save {role.charAt(0).toUpperCase() + role.slice(1)} Lead
+             </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  );
+}
