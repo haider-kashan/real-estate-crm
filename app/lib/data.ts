@@ -107,7 +107,7 @@ export const salesLeads: Lead[] = [
     floors: "3rd Floor",
     features: { hasBasement: false, isCorner: false, isParkFacing: false, isMainRoad: false, hasServantQuarter: false },
     notes: "Client decided not to sell.",
-    lastContactDate: "2026-02-04",
+    lastContactDate: "2026-01-04",
     dateAdded: "2023-12-05"
   }
 ];

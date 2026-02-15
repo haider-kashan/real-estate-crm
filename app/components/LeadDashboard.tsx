@@ -32,41 +32,44 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
   const activeChipBg = department === 'sales' ? 'bg-blue-600' : (department === 'rentals' ? 'bg-indigo-600' : 'bg-gray-900');
   const statuses = ['all', 'new', 'contacted', 'interested', 'negotiation', 'closed', 'dead'];
 
-  // --- 1. ACTION CENTER LOGIC (For Bell Icon) ---
+  // --- 1. ACTION CENTER LOGIC ---
   const urgentLeads = useMemo(() => {
     const now = new Date();
     const todayStr = now.toDateString(); 
 
     // @ts-ignore
     return initialData.filter(l => {
-      // Check 1: Reminder Due?
+      // Ignore Dead/Closed Leads
+      const status = (l.status || '').toLowerCase();
+      if (status === 'dead' || status === 'closed') {
+        return false;
+      }
+
       let isReminderDue = false;
       if (l.followUp) {
         const date = new Date(l.followUp);
         isReminderDue = date < now || date.toDateString() === todayStr;
       }
 
-      // Check 2: Health Critical?
       // @ts-ignore
       const health = getLeadHealth(l.lastContactDate, l.dateAdded);
-      const isCritical = health.status === 'Critical' && l.status !== 'closed' && l.status !== 'dead';
+      const isCritical = health.status === 'Critical';
 
       return isReminderDue || isCritical;
     }).sort((a, b) => {
-       // Reminders on top
        if (a.followUp && !b.followUp) return -1;
        return 0;
     });
   }, [initialData]);
 
-  const headerReminders: ReminderItem[] = urgentLeads.map(l => {
+  const headerReminders = urgentLeads.map(l => {
       const now = new Date();
       // @ts-ignore
       const health = getLeadHealth(l.lastContactDate, l.dateAdded);
       
-      let type: 'overdue' | 'today' | 'critical' = 'overdue';
+      let type: 'overdue' | 'today' | 'critical' | null = null;
       
-      if (health.status === 'Critical' && l.status !== 'closed' && l.status !== 'dead') {
+      if (health.status === 'Critical') {
         type = 'critical';
       } else if (l.followUp) {
         const fDate = new Date(l.followUp);
@@ -74,15 +77,19 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
         type = isToday ? 'today' : 'overdue';
       }
 
+      if (!type) return null;
+
       return {
           id: l.id,
           name: l.name,
           phone: l.phone,
+          date: l.followUp,
           type: type,
           daysAgo: health.days
       }
-  });
+  }).filter(Boolean) as ReminderItem[];
 
+  // --- FILTER ENGINE ---
   const filteredLeads = useMemo(() => {
     let result = initialData;
     if (activeTab !== 'all') result = result.filter(l => l.type === activeTab);
@@ -106,7 +113,6 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       
-      {/* HEADER */}
       <div className="sticky top-0 z-30 bg-white shadow-sm">
         <HeaderBar 
           title={title} 
@@ -139,7 +145,6 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
       <AddLeadModal isOpen={isModalOpen} onClose={() => router.back()} department={department} />
 
       <div className="p-3 space-y-3 flex-1 pb-32">
-        
         {/* --- MAIN LIST --- */}
         {filteredLeads.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
@@ -152,6 +157,9 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
              // @ts-ignore
              const health = getLeadHealth(lead.lastContactDate, lead.dateAdded);
              
+             // --- LOGIC: Hide Health Dot for Dead/Closed leads ---
+             const isInactive = ['dead', 'closed'].includes(lead.status);
+
              return (
                <div key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} className="block bg-white p-3.5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 relative overflow-hidden active:scale-[0.98] transition-transform cursor-pointer">
                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${['buyer', 'seller'].includes(lead.type) ? (lead.type === 'buyer' ? 'bg-blue-500' : 'bg-orange-500') : (lead.type === 'tenant' ? 'bg-indigo-500' : 'bg-purple-500')}`}></div>
@@ -159,8 +167,11 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
                    <div>
                      <div className="flex items-center gap-2">
                        <h3 className="font-extrabold text-gray-900 text-base">{lead.name}</h3>
-                       {/* HEALTH DOT */}
-                       <div className={`w-2.5 h-2.5 rounded-full ${health.color} border-2 border-white shadow-sm`} title={`Health: ${health.status} (${health.days}d)`}></div>
+                       
+                       {/* HEALTH DOT - Render ONLY if active */}
+                       {!isInactive && (
+                         <div className={`w-2.5 h-2.5 rounded-full ${health.color} border-2 border-white shadow-sm`} title={`Health: ${health.status} (${health.days}d)`}></div>
+                       )}
                      </div>
                      <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 font-medium">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>

@@ -11,7 +11,6 @@ import ShareLeadModal from '../../components/leads/ShareLeadModal';
 import EditLeadModal from '../../components/leads/EditLeadModal';
 import ReminderModal from '../../components/leads/ReminderModal';
 import InvoiceModal from '../../components/leads/InvoiceModal';
-import LeadHealth from '../../components/leads/LeadHealth';
 
 export default function LeadDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -37,7 +36,6 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
   }
 
   // --- CALCULATE HEALTH ---
-  // We now use the shared utility with the specific date fields requested
   // @ts-ignore
   const health = getLeadHealth(lead.lastContactDate, lead.dateAdded);
 
@@ -52,6 +50,13 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
   const handleUpdateLead = (updatedData: any) => {
     setLead(updatedData);
     alert("Lead Updated!");
+  };
+
+  // --- HANDLER: Log Contact ---
+  const handleLogContact = () => {
+    // @ts-ignore
+    setLead(prev => ({ ...prev, lastContactDate: new Date().toISOString() }));
+    alert("Contact Logged! Lead Health Restored 💚");
   };
 
   const handleSetReminder = (isoDate: string) => {
@@ -110,7 +115,7 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
       <div className="bg-white p-6 border-b border-gray-100">
         <div className="flex justify-between items-start mb-2">
           <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide border ${isSales ? 'border-blue-100 text-blue-600' : 'border-indigo-100 text-indigo-600'}`}>{lead.type}</span>
-          <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${lead.status === 'new' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{lead.status}</span>
+          <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${lead.status === 'new' ? 'bg-green-100 text-green-700' : lead.status === 'dead' ? 'bg-red-50 text-red-600' : lead.status === 'closed' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600'}`}>{lead.status}</span>
         </div>
         <h1 className="text-3xl font-extrabold text-gray-900 mb-1">{lead.name}</h1>
         <p className="text-gray-500 flex items-center gap-2 text-sm">
@@ -118,21 +123,25 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
           {lead.location}
         </p>
 
-        {/* --- HEALTH SCORE BAR --- */}
-        <div className="mt-6">
-           <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Health Score</span>
-              <span className={`text-xs font-bold ${health.text}`}>{health.label}</span>
-           </div>
-           <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-              <div 
-                className={`h-full ${health.color} transition-all duration-500 ${health.alert ? 'animate-pulse' : ''}`} 
-                style={{ width: `${health.percent}%` }}
-              ></div>
-           </div>
-           {/* @ts-ignore */}
-           {health.alert && <p className="text-[10px] text-red-500 font-bold mt-1">Action Required: Contact this lead immediately.</p>}
-        </div>
+        {/* --- HEALTH SCORE BAR (HIDDEN FOR DEAD/CLOSED) --- */}
+        {!['dead', 'closed'].includes(lead.status) && (
+          <div className="mt-5 bg-gray-50 p-3 rounded-xl border border-gray-100">
+             <div className="flex justify-between items-end mb-1">
+                <div>
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Lead Health</p>
+                   {/* @ts-ignore */}
+                   <p className={`text-sm font-bold ${health.text}`}>{health.status} ({health.days}d ago)</p>
+                </div>
+                <button onClick={handleLogContact} className="text-xs font-bold bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm active:scale-95 text-gray-700 hover:bg-gray-50">
+                   Mark Contacted
+                </button>
+             </div>
+             <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                {/* @ts-ignore */}
+                <div className={`h-1.5 rounded-full ${health.color} transition-all duration-500`} style={{ width: `${health.score}%` }}></div>
+             </div>
+          </div>
+        )}
       </div>
 
       <div className="p-4 space-y-4">
