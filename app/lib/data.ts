@@ -32,6 +32,7 @@ export type Lead = {
   
   // NEW FIELD: Stores the reminder date
   followUp?: string; // ISO Date String (e.g. "2024-02-14T10:00:00.000Z")
+  lastContactDate?: string;
 };
 
 export const salesLeads: Lead[] = [
@@ -67,7 +68,8 @@ export const salesLeads: Lead[] = [
     size: "7 Marla",
     features: { hasBasement: false, isCorner: true, isParkFacing: false, isMainRoad: false, hasServantQuarter: false },
     notes: "Doctor looking for investment plot.",
-    dateAdded: "2024-02-10"
+    dateAdded: "2024-02-10",
+    lastContactDate: "2026-02-11"
   },
   { 
     id: 101, 
@@ -86,6 +88,7 @@ export const salesLeads: Lead[] = [
     features: { hasBasement: true, isCorner: false, isParkFacing: false, isMainRoad: true, hasServantQuarter: true },
     notes: "Owner migrating.",
     dateAdded: "2024-01-20",
+    lastContactDate: "2026-02-13",
     followUp: new Date(Date.now() - 86400000).toISOString() // TEST: Sets a reminder for YESTERDAY (Overdue)
   },
   { 
@@ -104,6 +107,7 @@ export const salesLeads: Lead[] = [
     floors: "3rd Floor",
     features: { hasBasement: false, isCorner: false, isParkFacing: false, isMainRoad: false, hasServantQuarter: false },
     notes: "Client decided not to sell.",
+    lastContactDate: "2026-02-04",
     dateAdded: "2023-12-05"
   }
 ];
@@ -125,7 +129,8 @@ export const rentalLeads: Lead[] = [
     floors: "Upper Portion",
     features: { hasBasement: false, isCorner: false, isParkFacing: false, isMainRoad: false, hasServantQuarter: false },
     notes: "Small family (couple + 1 kid).",
-    dateAdded: "2024-02-13"
+    dateAdded: "2024-02-13",
+    lastContactDate: "2026-02-04"
   },
   { 
     id: 202, 
@@ -143,7 +148,8 @@ export const rentalLeads: Lead[] = [
     floors: "Full House",
     features: { hasBasement: false, isCorner: true, isParkFacing: true, isMainRoad: false, hasServantQuarter: true },
     notes: "Foreigner client looking for secure area.",
-    dateAdded: "2024-02-11"
+    dateAdded: "2024-02-11",
+    lastContactDate: "2026-01-13"
   },
   {
     id: 301,
@@ -161,7 +167,8 @@ export const rentalLeads: Lead[] = [
     floors: "Ground Portion",
     features: { hasBasement: false, isCorner: false, isParkFacing: false, isMainRoad: false, hasServantQuarter: true },
     notes: "Strictly small family only.",
-    dateAdded: "2024-02-13"
+    lastContactDate: "2024-01-01",
+    dateAdded: "2026-02-13"
   }
 ];
 

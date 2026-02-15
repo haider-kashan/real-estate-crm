@@ -4,12 +4,14 @@ import React, { useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { allLeads } from '../../lib/data';
+import { getLeadHealth } from '../../lib/utils'; // Import the shared utility
 
 // Component Imports
 import ShareLeadModal from '../../components/leads/ShareLeadModal';
 import EditLeadModal from '../../components/leads/EditLeadModal';
 import ReminderModal from '../../components/leads/ReminderModal';
-import InvoiceModal from '../../components/leads/InvoiceModal'; // <--- NEW IMPORT
+import InvoiceModal from '../../components/leads/InvoiceModal';
+import LeadHealth from '../../components/leads/LeadHealth';
 
 export default function LeadDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -23,7 +25,7 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
   const [isEditing, setIsEditing] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
-  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false); // <--- NEW STATE
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
   
   if (!lead) {
     return (
@@ -33,6 +35,11 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
       </div>
     );
   }
+
+  // --- CALCULATE HEALTH ---
+  // We now use the shared utility with the specific date fields requested
+  // @ts-ignore
+  const health = getLeadHealth(lead.lastContactDate, lead.dateAdded);
 
   // --- HANDLERS ---
   const handleDelete = () => {
@@ -50,10 +57,6 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
   const handleSetReminder = (isoDate: string) => {
     // @ts-ignore
     setLead(prev => prev ? ({ ...prev, followUp: isoDate }) : prev);
-    // You might want to update this to match the prop expected by ReminderModal if it changed
-    // For now assuming ReminderModal takes 'onSet' or similar. 
-    // In previous steps we named it onSet, here you used onSetReminder. 
-    // I will keep your props as they are in your code block.
     alert(`Reminder set!`);
   };
 
@@ -78,7 +81,7 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
         <h1 className="text-lg font-bold tracking-wide flex-1">Lead Details</h1>
         <div className="flex gap-1">
           
-          {/* INVOICE BUTTON (NEW) */}
+          {/* INVOICE BUTTON */}
           <button onClick={() => setIsInvoiceOpen(true)} className="p-2 hover:bg-white/20 rounded-full" title="Generate Invoice">
              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
           </button>
@@ -114,6 +117,22 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
           {lead.location}
         </p>
+
+        {/* --- HEALTH SCORE BAR --- */}
+        <div className="mt-6">
+           <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Health Score</span>
+              <span className={`text-xs font-bold ${health.text}`}>{health.label}</span>
+           </div>
+           <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+              <div 
+                className={`h-full ${health.color} transition-all duration-500 ${health.alert ? 'animate-pulse' : ''}`} 
+                style={{ width: `${health.percent}%` }}
+              ></div>
+           </div>
+           {/* @ts-ignore */}
+           {health.alert && <p className="text-[10px] text-red-500 font-bold mt-1">Action Required: Contact this lead immediately.</p>}
+        </div>
       </div>
 
       <div className="p-4 space-y-4">

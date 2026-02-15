@@ -1,25 +1,42 @@
-// app/lib/utils.ts
-
-export const parsePrice = (priceStr: string | undefined): number => {
+export const parsePrice = (priceStr: string) => {
   if (!priceStr) return 0;
+  const clean = priceStr.toLowerCase().replace(/,/g, '');
+  if (clean.includes('crore')) return parseFloat(clean) * 10000000;
+  if (clean.includes('lac') || clean.includes('lakh')) return parseFloat(clean) * 100000;
+  if (clean.includes('k')) return parseFloat(clean) * 1000;
+  return parseFloat(clean.replace(/[^0-9.]/g, '')) || 0;
+};
+
+// --- FIXED HEALTH LOGIC ---
+export const getLeadHealth = (lastContactDate?: string, dateAdded?: string) => {
+  // Priority: 1. Last Contact, 2. Date Added, 3. Fallback to Today (Only if NEW)
+  let targetDateStr = lastContactDate;
   
-  // Clean up string: remove commas, dashes, and extra spaces
-  // If it's a range like "45k - 50k", we grab the first part "45k"
-  let cleanStr = priceStr.toLowerCase().replace(/,/g, '').split('-')[0].trim();
-  
-  let multiplier = 1;
-  
-  if (cleanStr.includes('crore') || cleanStr.includes('cr')) {
-    multiplier = 10000000;
-    cleanStr = cleanStr.replace('crore', '').replace('cr', '');
-  } else if (cleanStr.includes('lac') || cleanStr.includes('lakh')) {
-    multiplier = 100000;
-    cleanStr = cleanStr.replace('lac', '').replace('lakh', '');
-  } else if (cleanStr.includes('k')) {
-    multiplier = 1000;
-    cleanStr = cleanStr.replace('k', '');
+  if (!targetDateStr) {
+    targetDateStr = dateAdded;
   }
+
+  // If we STILL have no date (rare), treat as new (Healthy)
+  if (!targetDateStr) {
+    return { status: 'Healthy', color: 'bg-green-500', text: 'text-green-600', bgText: 'bg-green-50', score: 100, days: 0 };
+  }
+
+  const targetDate = new Date(targetDateStr);
+  const now = new Date();
   
-  const numberPart = parseFloat(cleanStr);
-  return isNaN(numberPart) ? 0 : numberPart * multiplier;
+  // Calculate difference in Days
+  const diffTime = Math.abs(now.getTime() - targetDate.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); 
+
+  // LOGIC: 
+  // 0-7 Days: Healthy
+  // 8-14 Days: Warning
+  // 15+ Days: Critical
+  if (diffDays <= 7) {
+    return { status: 'Healthy', color: 'bg-green-500', text: 'text-green-600', bgText: 'bg-green-50', score: 100, days: diffDays };
+  } else if (diffDays <= 14) {
+    return { status: 'Warning', color: 'bg-orange-500', text: 'text-orange-600', bgText: 'bg-orange-50', score: 50, days: diffDays };
+  } else {
+    return { status: 'Critical', color: 'bg-red-600', text: 'text-red-600', bgText: 'bg-red-50', score: 5, days: diffDays };
+  }
 };
