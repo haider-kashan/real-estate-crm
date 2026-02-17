@@ -98,3 +98,27 @@ export async function updateProfile(formData: FormData) {
     return { error: "Failed to update profile." };
   }
 }
+
+// app/lib/auth-actions.ts
+
+// ... existing code ...
+
+// --- 5. GET AGENCY DETAILS FOR INVOICE ---
+export async function getAgencyDetails() {
+  const session = await auth();
+  if (!session?.user?.email) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email }
+  });
+
+  if (!user) return null;
+
+  return {
+    name: user.agencyName || user.name || "Real Estate Agency", // Fallback if no agency name
+    phone: user.phone || "",
+    email: user.email || "",
+    address: user.agencyAddress || "",
+    logo: user.logoUrl || null
+  };
+}

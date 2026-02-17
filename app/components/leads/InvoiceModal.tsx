@@ -4,19 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { pdf } from '@react-pdf/renderer';
 import { Lead } from '../../lib/data';
 import InvoicePDF from './InvoicePDF';
+import { getAgencyDetails } from '../../lib/auth-actions'; // <--- Import the server action
 
 interface InvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   lead: Lead;
 }
-
-// 1. Setup Mock Agency Data (Ideally this comes from DB/Settings)
-const AGENCY_DATA = {
-  name: "Skyline Real Estate",
-  phone: "+92 300 1234567",
-  email: "info@skyline.pk"
-};
 
 export default function InvoiceModal({ isOpen, onClose, lead }: InvoiceModalProps) {
   if (!isOpen) return null;
@@ -26,13 +20,39 @@ export default function InvoiceModal({ isOpen, onClose, lead }: InvoiceModalProp
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [invoiceNumber, setInvoiceNumber] = useState(`INV-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`);
   
-  // Dynamic Items State (Replacing separate Commission/Doc fields for flexibility)
+  // Real Agency Data State
+  const [agency, setAgency] = useState({
+    name: "Loading Agency...",
+    phone: "",
+    email: "",
+    address: "",
+    logo: null as string | null
+  });
+
+  // Dynamic Items State
   const [items, setItems] = useState([
     { description: `Agency Commission (1% of Deal)`, amount: 0 },
     { description: "Documentation & Processing Fee", amount: 5000 }
   ]);
 
   const [total, setTotal] = useState(0);
+
+  // --- 1. FETCH AGENCY DATA ON MOUNT ---
+  useEffect(() => {
+    const fetchAgency = async () => {
+      const data = await getAgencyDetails();
+      if (data) {
+        setAgency({
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          address: data.address,
+          logo: data.logo
+        });
+      }
+    };
+    fetchAgency();
+  }, []);
 
   // --- CALCULATE TOTAL AUTOMATICALLY ---
   useEffect(() => {
@@ -63,13 +83,16 @@ export default function InvoiceModal({ isOpen, onClose, lead }: InvoiceModalProp
     const invoiceData = {
       invoiceNo: invoiceNumber,
       date: invoiceDate,
-      agencyName: AGENCY_DATA.name,
-      agencyPhone: AGENCY_DATA.phone,
-      agencyEmail: AGENCY_DATA.email,
+      // USE REAL DB DATA HERE
+      agencyName: agency.name,
+      agencyPhone: agency.phone,
+      agencyEmail: agency.email,
+      agencyAddress: agency.address, // Added Address
+      agencyLogo: agency.logo,       // Added Logo
+      
       clientName: lead.name,
       clientPhone: lead.phone,
-      // The Logic you requested:
-      propertyRef: `Commission for sale of ${lead.propertyType} in ${lead.location} (${lead.size})`,
+      propertyRef: `Commission for sale of ${lead.propertyType} in ${lead.location}`,
       items: items,
       total: total
     };

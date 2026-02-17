@@ -1,20 +1,20 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
-
-// Register a nice font (Optional, standard Helvetica is used here for safety)
-// Font.register({ family: 'Open Sans', src: '...' });
+import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer'; // <--- Added Image
 
 // DARK THEME PROFESSIONAL STYLES
 const styles = StyleSheet.create({
   page: { flexDirection: 'column', backgroundColor: '#FFFFFF', fontFamily: 'Helvetica', paddingBottom: 60 },
   
-  // 1. TOP HEADER (Dark Blue Background like reference)
+  // 1. TOP HEADER (Dark Blue Background)
   headerContainer: { backgroundColor: '#1e293b', flexDirection: 'row', padding: 30, paddingBottom: 40, alignItems: 'flex-start' },
   
   // Left: Logo & Agency Name
   headerLeft: { flexGrow: 1 },
-  logoBox: { width: 40, height: 40, backgroundColor: '#FFFFFF', marginBottom: 10, justifyContent: 'center', alignItems: 'center' },
-  logoText: { fontSize: 20, fontWeight: 'bold', color: '#1e293b' }, // Fake Logo text
+  // Updated LogoBox to handle images properly
+  logoBox: { width: 50, height: 50, backgroundColor: '#FFFFFF', marginBottom: 10, justifyContent: 'center', alignItems: 'center', borderRadius: 6, overflow: 'hidden' },
+  logoImage: { width: '100%', height: '100%', objectFit: 'cover' }, // <--- New style for Image
+  logoText: { fontSize: 24, fontWeight: 'bold', color: '#1e293b' },
+  
   agencyName: { fontSize: 18, color: '#FFFFFF', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 },
   
   // Right: Invoice Label
@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
 
   // 2. INFO SECTION (Gray Background Strip)
   infoContainer: { flexDirection: 'row', backgroundColor: '#f1f5f9', padding: 20, paddingHorizontal: 30 },
-  infoCol: { width: '33%' },
+  infoCol: { width: '35%' }, // Slightly wider to fit addresses
   label: { fontSize: 8, color: '#64748b', textTransform: 'uppercase', marginBottom: 4, fontWeight: 'bold' },
   text: { fontSize: 10, color: '#334155', lineHeight: 1.4 },
   textBold: { fontSize: 10, color: '#0f172a', fontWeight: 'bold' },
@@ -77,10 +77,12 @@ interface InvoicePDFProps {
     agencyName: string;
     agencyPhone: string;
     agencyEmail: string;
+    agencyAddress: string;     // <--- ADDED
+    agencyLogo: string | null; // <--- ADDED
     clientName: string;
     clientPhone: string;
     propertyRef: string;
-    items: { description: string; amount: number }[]; // Dynamic Items
+    items: { description: string; amount: number }[];
     total: number;
   }
 }
@@ -93,10 +95,21 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
         {/* 1. DARK HEADER */}
         <View style={styles.headerContainer}>
           <View style={styles.headerLeft}>
-            {/* Fake Logo Placeholder */}
-            <View style={styles.logoBox}><Text style={styles.logoText}>X</Text></View>
+            
+            {/* LOGO LOGIC: Show Image if exists, else Show First Letter */}
+            <View style={styles.logoBox}>
+              {data.agencyLogo ? (
+                <Image src={data.agencyLogo} style={styles.logoImage} />
+              ) : (
+                <Text style={styles.logoText}>
+                  {data.agencyName ? data.agencyName.charAt(0).toUpperCase() : 'A'}
+                </Text>
+              )}
+            </View>
+
             <Text style={styles.agencyName}>{data.agencyName}</Text>
           </View>
+          
           <View style={styles.headerRight}>
             <Text style={styles.title}>INVOICE</Text>
             <Text style={styles.invoiceDetail}>NO: {data.invoiceNo}</Text>
@@ -111,6 +124,8 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
             <Text style={styles.textBold}>{data.agencyName}</Text>
             <Text style={styles.text}>{data.agencyEmail}</Text>
             <Text style={styles.text}>{data.agencyPhone}</Text>
+            {/* ADDED ADDRESS HERE */}
+            <Text style={styles.text}>{data.agencyAddress}</Text>
           </View>
           <View style={styles.infoCol}>
             <Text style={styles.label}>Bill To (Client)</Text>
@@ -118,7 +133,7 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
             <Text style={styles.text}>{data.clientPhone}</Text>
           </View>
           <View style={styles.infoCol}>
-            {/* Empty for spacing or payment info */}
+            {/* Empty column for spacing */}
           </View>
         </View>
 
@@ -172,7 +187,6 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
           
           <View style={styles.signBox}>
             <View style={styles.signLine} /> 
-            {/* The line above is blank for digital/physical signature */}
             <Text style={styles.signLabel}>Authorized Signature</Text>
           </View>
         </View>
