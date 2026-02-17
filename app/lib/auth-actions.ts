@@ -1,23 +1,23 @@
 'use server';
 
-import { signIn } from '../../auth';
+import { signIn, signOut } from '../../auth';
 import { AuthError } from 'next-auth';
-import prisma from './prisma'; // <--- Points to shared client in same folder
+import prisma from './prisma';
 import bcrypt from 'bcryptjs';
+import { revalidatePath } from 'next/cache';
+import { auth } from '../../auth';
 
 // --- 1. HANDLE LOGIN ---
 export async function authenticate(prevState: string | undefined, formData: FormData) {
   try {
     await signIn('credentials', {
       ...Object.fromEntries(formData),
-      redirectTo: '/', // Force redirect to Home
+      redirectTo: '/',
     });
   } catch (error) {
-    // CRITICAL FIX: Allow the redirect to happen
     if ((error as Error).message.includes('NEXT_REDIRECT')) {
       throw error;
     }
-
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
@@ -59,5 +59,42 @@ export async function register(prevState: string | undefined, formData: FormData
   } catch (error) {
     console.error('Registration Error:', error);
     return 'Failed to create user.';
+  }
+}
+
+// --- 3. HANDLE LOGOUT ---
+export async function logout() {
+  await signOut({ redirectTo: '/login' });
+}
+
+// --- 4. UPDATE PROFILE (With Logo) ---
+export async function updateProfile(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) return { error: "Not authenticated" };
+
+  const name = formData.get('name') as string;
+  const phone = formData.get('phone') as string;
+  const agencyName = formData.get('agencyName') as string;
+  const agencyAddress = formData.get('agencyAddress') as string;
+  const logoUrl = formData.get('logoUrl') as string; // <--- The Logo String
+
+  try {
+    await prisma.user.update({
+      where: { email: session.user.email },
+      data: {
+        name,
+        phone,
+        agencyName,
+        agencyAddress,
+        logoUrl, 
+      },
+    });
+
+    revalidatePath('/profile');
+    revalidatePath('/'); 
+    return { success: "Profile updated successfully!" };
+  } catch (error) {
+    console.error("Update failed:", error);
+    return { error: "Failed to update profile." };
   }
 }

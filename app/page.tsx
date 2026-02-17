@@ -1,8 +1,9 @@
-import { getLeads } from './actions'; // <--- Import from the Bridge
+import { getLeads } from './actions';
 import LeadDashboard from './components/LeadDashboard';
 import { ReminderItem } from './components/HeaderBar';
+import { auth } from '../auth'; // <--- 1. Import Auth
 
-// Helper to generate reminders (Same logic as before)
+// Helper to generate reminders
 const getReminders = (leads: any[]): ReminderItem[] => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -20,21 +21,27 @@ const getReminders = (leads: any[]): ReminderItem[] => {
   }).filter(Boolean) as ReminderItem[];
 };
 
-// 1. Make the function 'async' so it can wait for the Database
 export default async function Home() {
   
-  // 2. Fetch REAL data from Supabase
+  // 2. Fetch User Session
+  const session = await auth();
+  const user = session?.user 
+    ? { name: session.user.name || 'User', email: session.user.email || '' } 
+    : undefined;
+
+  // 3. Fetch REAL data from Supabase
   const leads = await getLeads(); 
 
-  // 3. Generate reminders from that real data
+  // 4. Generate reminders
   const myReminders = getReminders(leads);
 
   return (
     <LeadDashboard 
       title="Real Estate CRM" 
-      initialData={leads} // <--- Pass the Real Data here
+      initialData={leads} 
       department="all" 
       reminders={myReminders}
+      user={user} // <--- 5. Pass User to Dashboard
     />
   );
 }

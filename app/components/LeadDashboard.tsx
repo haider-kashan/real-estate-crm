@@ -13,9 +13,16 @@ interface LeadDashboardProps {
   department: 'sales' | 'rentals' | 'all';
   tabs?: { id: string; label: string }[];
   reminders?: ReminderItem[];
+  user?: { name: string; email: string }; // <--- 1. Added User Prop
 }
 
-export default function LeadDashboard({ title, initialData, department, tabs }: LeadDashboardProps) {
+export default function LeadDashboard({ 
+  title, 
+  initialData, 
+  department, 
+  tabs,
+  user // <--- 2. Destructure User Prop
+}: LeadDashboardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -33,15 +40,11 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
   const statuses = ['all', 'new', 'contacted', 'interested', 'negotiation', 'closed', 'dead'];
 
   // --- 0. DATA TRANSLATION LAYER (Database -> UI) ---
-  // This bridge converts Prisma keys (createdAt) to your UI keys (dateAdded)
   const processedData = useMemo(() => {
     return initialData.map((lead) => ({
       ...lead,
-      // Map Prisma 'createdAt' to your UI's 'dateAdded'
       dateAdded: lead.createdAt || lead.dateAdded,
-      // Map Prisma 'lastContacted' to your UI's 'lastContactDate'
       lastContactDate: lead.lastContacted || lead.lastContactDate,
-      // Ensure ID is usable
       id: lead.id, 
     }));
   }, [initialData]);
@@ -52,8 +55,7 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
     const todayStr = now.toDateString();
 
     // @ts-ignore
-    return processedData.filter(l => { // <--- CHANGED from initialData to processedData
-      // Ignore Dead/Closed Leads
+    return processedData.filter(l => {
       const status = (l.status || '').toLowerCase();
       if (status === 'dead' || status === 'closed') {
         return false;
@@ -74,7 +76,7 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
        if (a.followUp && !b.followUp) return -1;
        return 0;
     });
-  }, [processedData]); // <--- Dependency updated
+  }, [processedData]);
 
   const headerReminders = urgentLeads.map(l => {
       const now = new Date();
@@ -105,7 +107,7 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
 
   // --- FILTER ENGINE ---
   const filteredLeads = useMemo(() => {
-    let result = processedData; // <--- CHANGED from initialData to processedData
+    let result = processedData;
     if (activeTab !== 'all') result = result.filter(l => l.type === activeTab);
     if (activeStatus !== 'all') result = result.filter(l => l.status === activeStatus);
     if (filters.location) {
@@ -122,7 +124,7 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
     else if (sortBy === 'price_desc') { /* @ts-ignore */ result.sort((a, b) => parsePrice(b.budget || b.demand) - parsePrice(a.budget || a.demand)); }
     else { result.sort((a, b) => b.id - a.id); }
     return result;
-  }, [filters, sortBy, activeTab, activeStatus, processedData]); // <--- Dependency updated
+  }, [filters, sortBy, activeTab, activeStatus, processedData]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -134,6 +136,7 @@ export default function LeadDashboard({ title, initialData, department, tabs }: 
           theme={theme} 
           reminders={headerReminders} 
           showBack={department !== 'all'} 
+          user={user} // <--- 3. Passed User to HeaderBar
           onFilterChange={setFilters} 
           onSortChange={setSortBy} 
           onAddClick={() => router.push(pathname + '?adding=true')} 
