@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-// Replace 'any' with your actual Lead interface
+// Use 'any' to keep it flexible as requested
 type Lead = any; 
 
 interface EditLeadModalProps {
@@ -21,10 +21,12 @@ export default function EditLeadModal({ isOpen, onClose, lead, onSave }: EditLea
     if (lead && isOpen) {
       setEditForm({
         ...lead,
+        // Ensure features object exists so checkboxes don't crash
         features: lead.features || {
           hasBasement: false, isCorner: false, isParkFacing: false, isMainRoad: false, hasServantQuarter: false
         }
       });
+      
       // Check if phone and whatsapp are currently the same
       if (lead.phone && lead.whatsapp && lead.phone === lead.whatsapp) {
         setUseSamePhone(true);
@@ -63,6 +65,7 @@ export default function EditLeadModal({ isOpen, onClose, lead, onSave }: EditLea
       return;
     }
 
+    // Pass data back to Parent (which handles the DB save)
     onSave(editForm);
     onClose();
   };
@@ -259,6 +262,15 @@ export default function EditLeadModal({ isOpen, onClose, lead, onSave }: EditLea
                     onChange={() => toggleFeature('isMainRoad')}
                   />
                   <span className="text-sm text-gray-700">Main Road</span>
+                </label>
+
+                {/* ADDED MISSING SERVANT QUARTER CHECKBOX */}
+                <label className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
+                  <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    checked={editForm.features?.hasServantQuarter || false}
+                    onChange={() => toggleFeature('hasServantQuarter')}
+                  />
+                  <span className="text-sm text-gray-700">Servant Qtr</span>
                 </label>
             </div>
           </div>

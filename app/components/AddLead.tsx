@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { addLead } from '../actions'; // <--- 1. Import the Server Action
 
 interface AddLeadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // We allow passing a specific default type (e.g., force 'buyer' if on Buyers page)
   forcedType?: 'buyer' | 'seller' | 'tenant' | 'landlord';
   department?: 'sales' | 'rentals' | 'all';
 }
@@ -24,6 +24,7 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
 
   // Toggle for "Same as above" logic
   const [useSamePhone, setUseSamePhone] = useState(false);
+  const [loading, setLoading] = useState(false); // <--- 2. Loading State
 
   // Form Data
   const [formData, setFormData] = useState({
@@ -55,6 +56,7 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
       setSelectedDept(department === 'all' ? null : department);
       setRole(forcedType || (department === 'rentals' ? 'tenant' : 'buyer'));
       setUseSamePhone(false);
+      setLoading(false);
       setFormData({
         name: '', status: 'new', phone: '', whatsapp: '', location: '', budget: '', demand: '',
         propertyType: 'House', size: '', bedrooms: '', bathrooms: '', floors: '',
@@ -78,35 +80,55 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // --- VALIDATION CHECKS ---
-    if (!formData.name.trim()) {
-      alert("Please enter the Full Name.");
-      return;
-    }
-    if (!formData.phone.trim()) {
-      alert("Please enter the Primary Call number.");
-      return;
-    }
-    if (!formData.propertyType.trim()) {
-      alert("Please select or enter a Property Type.");
-      return;
-    }
-    // Check Budget or Demand depending on role
-    const priceValue = ['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand;
-    if (!priceValue?.trim()) {
-      alert("Please enter the Budget/Demand price.");
-      return;
-    }
-
-    // Prepare final object
-    const finalData = { ...formData, type: role };
-    console.log("Saving Full Lead:", finalData); 
+    if (!formData.name.trim()) { alert("Please enter the Full Name."); return; }
+    if (!formData.phone.trim()) { alert("Please enter the Primary Call number."); return; }
     
-    alert(`${role.toUpperCase()} Lead Added Successfully!`);
-    onClose();
+    const priceValue = ['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand;
+    if (!priceValue?.trim()) { alert("Please enter the Budget/Demand price."); return; }
+
+    setLoading(true); // Start Loading
+
+    // --- 3. PREPARE PAYLOAD FOR DATABASE ---
+    // We need to flatten 'features' so it matches the Database Schema
+    const payload = {
+      name: formData.name,
+      phone: formData.phone,
+      whatsapp: formData.whatsapp,
+      location: formData.location,
+      type: role,
+      status: formData.status,
+      propertyType: formData.propertyType,
+      size: formData.size,
+      
+      // Handle Budget vs Demand based on role
+      budget: ['buyer', 'tenant'].includes(role) ? formData.budget : undefined,
+      demand: ['seller', 'landlord'].includes(role) ? formData.demand : undefined,
+      
+      floors: formData.floors,
+      bedrooms: formData.bedrooms,
+      bathrooms: formData.bathrooms,
+      
+      // Spread the features directly (Flattening)
+      ...formData.features, 
+      
+      notes: formData.notes
+    };
+
+    // --- 4. CALL SERVER ACTION ---
+    const result = await addLead(payload);
+
+    setLoading(false); // Stop Loading
+
+    if (result.success) {
+      onClose(); // Close the modal automatically
+    } else {
+      alert("Failed to save lead. Please check the console.");
+      console.error(result.error);
+    }
   };
 
   if (!isOpen) return null;
@@ -188,16 +210,16 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
           
           {/* ROLE TOGGLE */}
           <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-lg shrink-0 border border-gray-200">
-             <button type="button" 
-               onClick={() => setRole(isSales ? 'buyer' : 'tenant')}
-               className={`py-2.5 text-xs font-bold rounded-md transition-all shadow-sm ${role === (isSales ? 'buyer' : 'tenant') ? 'bg-white text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
-               {isSales ? 'BUYER' : 'TENANT'}
-             </button>
-             <button type="button"
-               onClick={() => setRole(isSales ? 'seller' : 'landlord')}
-               className={`py-2.5 text-xs font-bold rounded-md transition-all shadow-sm ${role === (isSales ? 'seller' : 'landlord') ? 'bg-white text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
-               {isSales ? 'SELLER' : 'LANDLORD'}
-             </button>
+              <button type="button" 
+                onClick={() => setRole(isSales ? 'buyer' : 'tenant')}
+                className={`py-2.5 text-xs font-bold rounded-md transition-all shadow-sm ${role === (isSales ? 'buyer' : 'tenant') ? 'bg-white text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
+                {isSales ? 'BUYER' : 'TENANT'}
+              </button>
+              <button type="button"
+                onClick={() => setRole(isSales ? 'seller' : 'landlord')}
+                className={`py-2.5 text-xs font-bold rounded-md transition-all shadow-sm ${role === (isSales ? 'seller' : 'landlord') ? 'bg-white text-gray-900 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
+                {isSales ? 'SELLER' : 'LANDLORD'}
+              </button>
           </div>
 
           {/* 1. Basic Info */}
@@ -277,14 +299,14 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
                <div>
                   <label className="text-xs font-semibold text-gray-500 uppercase">Property Type <span className="text-red-500">*</span></label>
                   <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 outline-none bg-white" 
-                     value={formData.propertyType} 
-                     onChange={(e) => setFormData({...formData, propertyType: e.target.value})}
+                      value={formData.propertyType} 
+                      onChange={(e) => setFormData({...formData, propertyType: e.target.value})}
                   >
-                     <option value="House">House</option>
-                     <option value="Portion">Portion</option>
-                     <option value="Flat">Flat</option>
-                     <option value="Plot">Plot</option>
-                     <option value="Commercial">Commercial</option>
+                      <option value="House">House</option>
+                      <option value="Portion">Portion</option>
+                      <option value="Flat">Flat</option>
+                      <option value="Plot">Plot</option>
+                      <option value="Commercial">Commercial</option>
                   </select>
                </div>
                <div>
@@ -337,37 +359,18 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Features</h4>
             <div className="grid grid-cols-2 gap-3">
-                <label className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
-                  <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                    checked={formData.features.hasBasement}
-                    onChange={() => toggleFeature('hasBasement')}
-                  />
-                  <span className="text-sm text-gray-700">Basement</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
-                  <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                    checked={formData.features.isCorner}
-                    onChange={() => toggleFeature('isCorner')}
-                  />
-                  <span className="text-sm text-gray-700">Corner</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
-                  <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                    checked={formData.features.isParkFacing}
-                    onChange={() => toggleFeature('isParkFacing')}
-                  />
-                  <span className="text-sm text-gray-700">Park Facing</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
-                  <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                    checked={formData.features.isMainRoad}
-                    onChange={() => toggleFeature('isMainRoad')}
-                  />
-                  <span className="text-sm text-gray-700">Main Road</span>
-                </label>
+                {Object.keys(formData.features).map((key) => (
+                    <label key={key} className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
+                        <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                        checked={formData.features[key as keyof typeof formData.features]}
+                        onChange={() => toggleFeature(key)}
+                        />
+                        {/* Convert camelCase to Title Case (e.g. hasBasement -> Basement) */}
+                        <span className="text-sm text-gray-700 capitalize">
+                            {key.replace('has', '').replace('is', '').replace(/([A-Z])/g, ' $1').trim()}
+                        </span>
+                    </label>
+                ))}
             </div>
           </div>
 
@@ -383,8 +386,19 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
 
           {/* Footer Action */}
           <div className="pt-2">
-             <button type="submit" className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-colors active:scale-[0.98] ${themeBtn}`}>
-               Save {role.charAt(0).toUpperCase() + role.slice(1)} Lead
+             <button 
+                type="submit" 
+                disabled={loading}
+                className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-colors active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2 ${themeBtn}`}
+             >
+                {loading ? (
+                    <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>Saving...</span>
+                    </>
+                ) : (
+                    `Save ${role.charAt(0).toUpperCase() + role.slice(1)} Lead`
+                )}
              </button>
           </div>
 

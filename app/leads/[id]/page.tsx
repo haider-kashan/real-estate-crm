@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, use } from 'react';
+import React, { useState, use, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { allLeads } from '../../lib/data';
-import { getLeadHealth } from '../../lib/utils'; // Import the shared utility
+import { getLeadHealth } from '../../lib/utils';
+import { getLead, deleteLead, updateLead } from '../../actions';
 
 // Component Imports
 import ShareLeadModal from '../../components/leads/ShareLeadModal';
@@ -16,16 +16,58 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
   const router = useRouter();
 
-  const initialLead = allLeads.find((l) => l.id.toString() === id);
-
   // --- STATES ---
-  const [lead, setLead] = useState(initialLead);
+  const [lead, setLead] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
   const [isEditing, setIsEditing] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
+
+  // --- 1. FETCH LEAD FROM DB ---
+  useEffect(() => {
+    const fetchLead = async () => {
+      try {
+        const dbLead = await getLead(parseInt(id));
+        
+        if (dbLead) {
+          // RECONSTRUCT YOUR ORIGINAL DATA STRUCTURE
+          const transformedLead = {
+            ...dbLead,
+            // Restore Date Added (UI uses dateAdded, DB uses createdAt)
+            dateAdded: dbLead.createdAt, 
+            lastContactDate: dbLead.lastContacted,
+            
+            // Restore Nested Features Object for your UI
+            features: {
+              hasBasement: dbLead.hasBasement,
+              isCorner: dbLead.isCorner,
+              isParkFacing: dbLead.isParkFacing,
+              isMainRoad: dbLead.isMainRoad,
+              hasServantQuarter: dbLead.hasServantQuarter,
+            }
+          };
+          setLead(transformedLead);
+        }
+      } catch (err) {
+        console.error("Error fetching lead:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLead();
+  }, [id]);
   
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+      </div>
+    );
+  }
+
   if (!lead) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50 p-6 text-center">
@@ -40,35 +82,46 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
   const health = getLeadHealth(lead.lastContactDate, lead.dateAdded);
 
   // --- HANDLERS ---
-  const handleDelete = () => {
-    if (window.confirm(`Delete ${lead.name}?`)) {
-      alert("Lead Deleted!");
-      router.push('/');
+  const handleDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete ${lead.name}? This cannot be undone.`)) {
+      const result = await deleteLead(lead.id);
+      if (result.success) {
+        router.push('/');
+      } else {
+        alert("Error deleting lead.");
+      }
     }
   };
 
-  const handleUpdateLead = (updatedData: any) => {
-    setLead(updatedData);
-    alert("Lead Updated!");
+  const handleUpdateLead = async (updatedData: any) => {
+    setLead(updatedData); // Instant UI update
+    
+    // Flatten features for DB
+    const payload = {
+      ...updatedData,
+      ...updatedData.features 
+    };
+    
+    await updateLead(lead.id, payload);
   };
 
-  // --- HANDLER: Log Contact ---
-  const handleLogContact = () => {
+  const handleLogContact = async () => {
+    const now = new Date();
     // @ts-ignore
-    setLead(prev => ({ ...prev, lastContactDate: new Date().toISOString() }));
-    alert("Contact Logged! Lead Health Restored 💚");
+    setLead(prev => ({ ...prev, lastContactDate: now }));
+    await updateLead(lead.id, { lastContacted: now });
   };
 
-  const handleSetReminder = (isoDate: string) => {
+  const handleSetReminder = async (isoDate: string) => {
     // @ts-ignore
     setLead(prev => prev ? ({ ...prev, followUp: isoDate }) : prev);
-    alert(`Reminder set!`);
+    await updateLead(lead.id, { followUp: isoDate });
   };
 
-  const handleRemoveReminder = () => {
+  const handleRemoveReminder = async () => {
     // @ts-ignore
     setLead(prev => prev ? ({ ...prev, followUp: null }) : prev);
-    alert("Reminder removed!");
+    await updateLead(lead.id, { followUp: null });
   };
 
   const isSales = ['buyer', 'seller'].includes(lead.type);
@@ -79,138 +132,193 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
     <div className="min-h-screen bg-gray-50 flex flex-col pb-40 relative">
       
       {/* HEADER */}
-      <header className={`p-4 text-white sticky top-0 z-10 flex items-center shadow-md ${themeBg}`}>
-        <button onClick={() => router.back()} className="mr-4 p-1 hover:bg-white/20 rounded-full">
+      <header className={`px-4 py-3 text-white sticky top-0 z-20 flex items-center shadow-md ${themeBg}`}>
+        <button onClick={() => router.back()} className="mr-3 p-2 hover:bg-white/20 rounded-full transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </button>
-        <h1 className="text-lg font-bold tracking-wide flex-1">Lead Details</h1>
+        <div className="flex-1">
+          <h1 className="text-lg font-bold leading-tight">{lead.name}</h1>
+          <p className="text-xs text-white/80 font-medium uppercase tracking-wide">{lead.type} • {lead.status}</p>
+        </div>
         <div className="flex gap-1">
-          
-          {/* INVOICE BUTTON */}
-          <button onClick={() => setIsInvoiceOpen(true)} className="p-2 hover:bg-white/20 rounded-full" title="Generate Invoice">
+          <button onClick={() => setIsInvoiceOpen(true)} className="p-2 hover:bg-white/20 rounded-full" title="Invoice">
              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
           </button>
-
-          {/* REMINDER BELL */}
-          <button onClick={() => setIsReminderOpen(true)} className="p-2 hover:bg-white/20 rounded-full relative" title="Set Reminder">
+          <button onClick={() => setIsReminderOpen(true)} className="p-2 hover:bg-white/20 rounded-full relative" title="Reminder">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
-            {/* Show dot if active */}
             {/* @ts-ignore */}
-            {lead.followUp && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>}
+            {lead.followUp && <span className="absolute top-2 right-2 w-2 h-2 bg-red-400 rounded-full border border-white"></span>}
           </button>
-
           <button onClick={() => setIsShareModalOpen(true)} className="p-2 hover:bg-white/20 rounded-full" title="Share">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
           </button>
           <button onClick={() => setIsEditing(true)} className="p-2 hover:bg-white/20 rounded-full" title="Edit">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
           </button>
-          <button onClick={handleDelete} className="p-2 hover:bg-white/20 rounded-full text-red-100 hover:text-white" title="Delete">
+          <button onClick={handleDelete} className="p-2 hover:bg-white/20 rounded-full text-red-200 hover:text-white" title="Delete">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
           </button>
         </div>
       </header>
 
-      {/* INFO CARD */}
-      <div className="bg-white p-6 border-b border-gray-100">
-        <div className="flex justify-between items-start mb-2">
-          <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide border ${isSales ? 'border-blue-100 text-blue-600' : 'border-indigo-100 text-indigo-600'}`}>{lead.type}</span>
-          <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${lead.status === 'new' ? 'bg-green-100 text-green-700' : lead.status === 'dead' ? 'bg-red-50 text-red-600' : lead.status === 'closed' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600'}`}>{lead.status}</span>
-        </div>
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-1">{lead.name}</h1>
-        <p className="text-gray-500 flex items-center gap-2 text-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-          {lead.location}
-        </p>
+      {/* MAIN CONTENT */}
+      <div className="p-4 space-y-4">
 
-        {/* --- HEALTH SCORE BAR (HIDDEN FOR DEAD/CLOSED) --- */}
+        {/* 1. HEALTH & STATUS CARD */}
         {!['dead', 'closed'].includes(lead.status) && (
-          <div className="mt-5 bg-gray-50 p-3 rounded-xl border border-gray-100">
-             <div className="flex justify-between items-end mb-1">
-                <div>
-                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Lead Health</p>
-                   {/* @ts-ignore */}
-                   <p className={`text-sm font-bold ${health.text}`}>{health.status} ({health.days}d ago)</p>
-                </div>
-                <button onClick={handleLogContact} className="text-xs font-bold bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm active:scale-95 text-gray-700 hover:bg-gray-50">
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+             <div className="flex justify-between items-center mb-2">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Lead Health</p>
+                {/* @ts-ignore */}
+                <p className={`text-sm font-bold ${health.text}`}>{health.status}</p>
+             </div>
+             <div className="w-full bg-gray-100 rounded-full h-2 mb-3 overflow-hidden">
+                {/* @ts-ignore */}
+                <div className={`h-2 rounded-full ${health.color} transition-all duration-500`} style={{ width: `${health.score}%` }}></div>
+             </div>
+             <div className="flex justify-between items-center">
+                <p className="text-xs text-gray-400">Last contact: {health.days} days ago</p>
+                <button onClick={handleLogContact} className="text-xs font-bold bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg text-gray-700 hover:bg-gray-100 active:scale-95 transition-all">
                    Mark Contacted
                 </button>
              </div>
-             <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2 overflow-hidden">
-                {/* @ts-ignore */}
-                <div className={`h-1.5 rounded-full ${health.color} transition-all duration-500`} style={{ width: `${health.score}%` }}></div>
-             </div>
           </div>
         )}
-      </div>
 
-      <div className="p-4 space-y-4">
-        
-        {/* --- REMINDER BANNER --- */}
+        {/* 2. REMINDER CARD (If set) */}
         {/* @ts-ignore */}
         {lead.followUp && (
-           <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center justify-between animate-in fade-in">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 text-lg">🔔</div>
-                <div>
-                  <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Reminder Set</p>
-                  {/* @ts-ignore */}
-                  <p className="text-sm font-bold text-gray-900">{new Date(lead.followUp).toDateString()}</p>
-                </div>
+           <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-amber-500 shadow-sm text-lg">⏰</div>
+              <div className="flex-1">
+                 <p className="text-xs font-bold text-amber-700 uppercase">Next Follow Up</p>
+                 {/* @ts-ignore */}
+                 <p className="text-sm font-bold text-gray-900">{new Date(lead.followUp).toLocaleDateString(undefined, {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}</p>
               </div>
-              <button onClick={() => setIsReminderOpen(true)} className="text-xs font-bold text-amber-700 underline">Change</button>
            </div>
         )}
 
-        {/* Price & Details */}
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-          <p className="text-xs text-gray-400 font-bold uppercase mb-1">{['buyer', 'tenant'].includes(lead.type) ? 'Budget Range' : 'Demand Price'}</p>
-          <p className={`text-3xl font-bold ${themeColor} mb-4`}>{/* @ts-ignore */}{lead.budget || lead.demand}</p>
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-            <div><p className="text-xs text-gray-400 font-bold uppercase">Type</p><p className="font-semibold text-gray-900">{lead.propertyType || 'N/A'}</p></div>
-            <div><p className="text-xs text-gray-400 font-bold uppercase">Size</p><p className="font-semibold text-gray-900">{/* @ts-ignore */}{lead.size || 'N/A'}</p></div>
-            <div><p className="text-xs text-gray-400 font-bold uppercase">Floors</p><p className="font-semibold text-gray-900">{/* @ts-ignore */}{lead.floors || 'N/A'}</p></div>
-            <div><p className="text-xs text-gray-400 font-bold uppercase">Beds / Baths</p><p className="font-semibold text-gray-900">{/* @ts-ignore */}{lead.bedrooms || '-'} / {lead.bathrooms || '-'}</p></div>
-          </div>
+        {/* 3. PRIMARY DETAILS CARD (Price & Location) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+           <div className="p-5 border-b border-gray-50">
+             <p className="text-xs text-gray-400 font-bold uppercase mb-1">{['buyer', 'tenant'].includes(lead.type) ? 'Budget Range' : 'Demand Price'}</p>
+             <p className={`text-3xl font-extrabold ${themeColor}`}>{/* @ts-ignore */}{lead.budget || lead.demand || 'N/A'}</p>
+             <div className="mt-3 flex items-start gap-2">
+                <svg className="w-4 h-4 text-gray-400 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                <p className="text-sm font-medium text-gray-700 leading-snug">{lead.location}</p>
+             </div>
+           </div>
+           
+           {/* Grid Specs */}
+           <div className="grid grid-cols-2 divide-x divide-gray-50 bg-gray-50/50">
+              <div className="p-4 text-center">
+                 <p className="text-[10px] font-bold text-gray-400 uppercase">Property Type</p>
+                 <p className="font-bold text-gray-900">{lead.propertyType}</p>
+              </div>
+              <div className="p-4 text-center">
+                 <p className="text-[10px] font-bold text-gray-400 uppercase">Size</p>
+                 <p className="font-bold text-gray-900">{lead.size || '-'}</p>
+              </div>
+           </div>
         </div>
 
-        {/* Features */}
-        {/* @ts-ignore */}
-        {lead.features && (
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-sm font-bold text-gray-900 uppercase mb-3">Key Features</h3>
-            <div className="flex flex-wrap gap-2">
-              {/* @ts-ignore */}
-              {lead.features.hasBasement && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Basement</span>}
-              {/* @ts-ignore */}
-              {lead.features.isCorner && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Corner</span>}
-              {/* @ts-ignore */}
-              {lead.features.isParkFacing && <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold">Park Facing</span>}
-              {/* @ts-ignore */}
-              {lead.features.isMainRoad && <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">Main Road</span>}
-              {/* @ts-ignore */}
-              {lead.features.hasServantQuarter && <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold">Servant Qtr</span>}
-            </div>
-          </div>
-        )}
+        {/* 4. EXTENDED SPECS (Beds, Baths, Floors, etc.) */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+           <h3 className="text-sm font-bold text-gray-900 uppercase mb-4 border-b border-gray-50 pb-2">Specifications</h3>
+           <div className="grid grid-cols-3 gap-4">
+              <div className="bg-gray-50 p-3 rounded-xl text-center">
+                 <p className="text-xs text-gray-500 mb-1">Floors</p>
+                 <p className="font-bold text-gray-900 text-lg">{lead.floors || '-'}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-xl text-center">
+                 <p className="text-xs text-gray-500 mb-1">Bedrooms</p>
+                 <p className="font-bold text-gray-900 text-lg">{lead.bedrooms || '-'}</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-xl text-center">
+                 <p className="text-xs text-gray-500 mb-1">Bathrooms</p>
+                 <p className="font-bold text-gray-900 text-lg">{lead.bathrooms || '-'}</p>
+              </div>
+           </div>
 
-        {/* Notes */}
-        {/* @ts-ignore */}
-        {lead.notes && (
-          <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-sm font-bold text-gray-900 uppercase mb-2">Notes</h3>
-            {/* @ts-ignore */}
-            <p className="text-sm text-gray-600 leading-relaxed">{lead.notes}</p>
-          </div>
-        )}
+           {/* Features List */}
+           {/* @ts-ignore */}
+           {lead.features && Object.values(lead.features).some(Boolean) && (
+             <div className="mt-5 pt-4 border-t border-gray-50">
+               <p className="text-xs font-bold text-gray-400 uppercase mb-3">Key Features</p>
+               <div className="flex flex-wrap gap-2">
+                 {/* @ts-ignore */}
+                 {lead.features.hasBasement && <span className="px-3 py-1 bg-gray-100 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold">Basement</span>}
+                 {/* @ts-ignore */}
+                 {lead.features.isCorner && <span className="px-3 py-1 bg-gray-100 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold">Corner</span>}
+                 {/* @ts-ignore */}
+                 {lead.features.isParkFacing && <span className="px-3 py-1 bg-green-50 border border-green-100 text-green-700 rounded-lg text-xs font-semibold">Park Facing</span>}
+                 {/* @ts-ignore */}
+                 {lead.features.isMainRoad && <span className="px-3 py-1 bg-blue-50 border border-blue-100 text-blue-700 rounded-lg text-xs font-semibold">Main Road</span>}
+                 {/* @ts-ignore */}
+                 {lead.features.hasServantQuarter && <span className="px-3 py-1 bg-gray-100 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold">Servant Qtr</span>}
+               </div>
+             </div>
+           )}
+        </div>
+
+        {/* 5. NOTES & HISTORY */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+           <h3 className="text-sm font-bold text-gray-900 uppercase mb-3">Notes</h3>
+           <div className="bg-yellow-50/50 p-4 rounded-xl border border-yellow-100 min-h-[80px]">
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{lead.notes || "No notes added."}</p>
+           </div>
+           
+           <div className="mt-4 pt-4 border-t border-gray-50 flex flex-col gap-2">
+              <div className="flex justify-between text-xs text-gray-400">
+                 <span>Added on</span>
+                 {/* @ts-ignore */}
+                 <span className="font-medium text-gray-600">{new Date(lead.dateAdded).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between text-xs text-gray-400">
+                 <span>Last Updated</span>
+                 {/* @ts-ignore */}
+                 <span className="font-medium text-gray-600">{lead.lastContactDate ? new Date(lead.lastContactDate).toLocaleDateString() : 'Never'}</span>
+              </div>
+           </div>
+        </div>
+        
+        {/* 6. CONTACT DETAILS (Explicit) */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-20">
+            <h3 className="text-sm font-bold text-gray-900 uppercase mb-3">Contact Info</h3>
+            <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">📞</div>
+                    <div>
+                        <p className="text-xs text-gray-400 font-bold uppercase">Phone</p>
+                        <p className="text-sm font-bold text-gray-900">{lead.phone}</p>
+                    </div>
+                </div>
+                {lead.whatsapp && (
+                    <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600">💬</div>
+                        <div>
+                            <p className="text-xs text-green-700/60 font-bold uppercase">WhatsApp</p>
+                            <p className="text-sm font-bold text-green-800">{lead.whatsapp}</p>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+
       </div>
 
       {/* FIXED ACTION BAR */}
-      <div className="fixed bottom-20 left-0 w-full px-4 z-40"> 
-        <div className="flex gap-3 bg-white p-3 rounded-2xl shadow-xl border border-gray-200">
-          <a href={`tel:${lead.phone}`} className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white font-bold py-3 rounded-xl active:scale-95 transition-transform">Call</a>
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 p-4 z-40 pb-6 safe-area-pb">
+        <div className="flex gap-3 max-w-lg mx-auto">
+          <a href={`tel:${lead.phone}`} className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            Call
+          </a>
           {/* @ts-ignore */}
-          <a href={`https://wa.me/${(lead.whatsapp || lead.phone).replace(/[^0-9]/g, '')}`} target="_blank" className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white font-bold py-3 rounded-xl active:scale-95 transition-transform">WhatsApp</a>
+          <a href={`https://wa.me/${(lead.whatsapp || lead.phone).replace(/[^0-9]/g, '')}`} target="_blank" className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform">
+             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+             WhatsApp
+          </a>
         </div>
       </div>
 
@@ -219,7 +327,7 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
         isOpen={isShareModalOpen} 
         onClose={() => setIsShareModalOpen(false)} 
         lead={lead} 
-        allLeads={allLeads} 
+        allLeads={[]} 
       />
 
       <EditLeadModal 
@@ -238,7 +346,6 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
         onRemove={handleRemoveReminder}
       />
 
-      {/* NEW INVOICE MODAL */}
       <InvoiceModal 
         isOpen={isInvoiceOpen}
         onClose={() => setIsInvoiceOpen(false)}
