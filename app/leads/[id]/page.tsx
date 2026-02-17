@@ -99,10 +99,24 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
     // Flatten features for DB
     const payload = {
       ...updatedData,
-      ...updatedData.features 
+      hasBasement: updatedData.features?.hasBasement,
+      isCorner: updatedData.features?.isCorner,
+      isParkFacing: updatedData.features?.isParkFacing,
+      isMainRoad: updatedData.features?.isMainRoad,
+      hasServantQuarter: updatedData.features?.hasServantQuarter,
     };
-    
-    await updateLead(lead.id, payload);
+    try {
+      // 3. Call the server action
+      const result = await updateLead(lead.id, payload);
+      
+      if (result.success) {
+        setIsEditing(false); // Close modal on success
+      } else {
+        alert("Failed to save to database.");
+      }
+    } catch (error) {
+      console.error("Database Update Error:", error);
+    }   
   };
 
   const handleLogContact = async () => {
@@ -332,7 +346,7 @@ export default function LeadDetailsPage({ params }: { params: Promise<{ id: stri
 
       <EditLeadModal 
         isOpen={isEditing} 
-        onClose={() => setIsEditing(false)} 
+        onClose={() => setIsEditing(false)}
         lead={lead} 
         onSave={handleUpdateLead} 
       />

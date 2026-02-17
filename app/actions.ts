@@ -1,10 +1,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { auth } from '../auth'; // Points to root auth.ts
-import prisma from './lib/prisma'; // <--- Uses the shared connection
+import { auth } from '../auth'; 
+import prisma from './lib/prisma'; 
 
-// --- HELPER: GET CURRENT USER ID (REAL) ---
+// --- HELPER: GET CURRENT USER ID ---
 async function getUserId() {
   const session = await auth(); 
   
@@ -89,22 +89,38 @@ export async function addLead(data: any) {
   }
 }
 
-// 4. UPDATE LEAD
+// 4. UPDATE LEAD (Fixed & Cleaned)
 export async function updateLead(id: number, data: any) {
   try {
     const userId = await getUserId();
     const existing = await prisma.lead.findUnique({ where: { id } });
+    
     if (existing?.userId !== userId) return { success: false, error: "Unauthorized" };
+
+    // Remove metadata that Prisma shouldn't update directly
+    const { 
+      id: _id, 
+      userId: _userId, 
+      createdAt, 
+      updatedAt, 
+      features, 
+      dateAdded, 
+      lastContactDate, 
+      ...updateData 
+    } = data;
 
     const updatedLead = await prisma.lead.update({
       where: { id },
-      data: data,
+      data: updateData,
     });
+
     revalidatePath(`/leads/${id}`);
     revalidatePath('/');
+    
     return { success: true, lead: updatedLead };
   } catch (error) {
-    return { success: false, error };
+    console.error("Update Error:", error);
+    return { success: false, error: "Failed to update lead" };
   }
 }
 

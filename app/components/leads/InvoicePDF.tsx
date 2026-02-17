@@ -98,8 +98,11 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
             
             {/* LOGO LOGIC: Show Image if exists, else Show First Letter */}
             <View style={styles.logoBox}>
-              {data.agencyLogo ? (
-                <Image src={data.agencyLogo} style={styles.logoImage} />
+              {data.agencyLogo && data.agencyLogo.startsWith('data:image') ? (
+                <Image
+                  src={data.agencyLogo}
+                  style={{width: 50, height: 50, borderRadius: 6}}
+                />
               ) : (
                 <Text style={styles.logoText}>
                   {data.agencyName ? data.agencyName.charAt(0).toUpperCase() : 'A'}

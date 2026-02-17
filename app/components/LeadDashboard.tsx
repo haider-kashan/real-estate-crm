@@ -13,7 +13,7 @@ interface LeadDashboardProps {
   department: 'sales' | 'rentals' | 'all';
   tabs?: { id: string; label: string }[];
   reminders?: ReminderItem[];
-  user?: { name: string; email: string }; // <--- 1. Added User Prop
+  user?: { name: string; email: string; logoUrl?: string | null}; // <--- 1. Added User Prop
 }
 
 export default function LeadDashboard({ 

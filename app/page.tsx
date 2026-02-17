@@ -1,7 +1,8 @@
 import { getLeads } from './actions';
 import LeadDashboard from './components/LeadDashboard';
 import { ReminderItem } from './components/HeaderBar';
-import { auth } from '../auth'; // <--- 1. Import Auth
+import { auth } from '../auth'; 
+import prisma from '@/app/lib/prisma'; // <--- 1. Import Prisma
 
 // Helper to generate reminders
 const getReminders = (leads: any[]): ReminderItem[] => {
@@ -25,14 +26,27 @@ export default async function Home() {
   
   // 2. Fetch User Session
   const session = await auth();
-  const user = session?.user 
-    ? { name: session.user.name || 'User', email: session.user.email || '' } 
+  
+  // 3. Fetch Full User Data from DB (to get the Logo)
+  const dbUser = session?.user?.email 
+    ? await prisma.user.findUnique({ 
+        where: { email: session.user.email },
+        select: { name: true, email: true, logoUrl: true } // Only fetch what we need
+      }) 
+    : null;
+
+  const user = dbUser 
+    ? { 
+        name: dbUser.name || 'User', 
+        email: dbUser.email || '', 
+        logoUrl: dbUser.logoUrl // <--- 4. Pass the real logo string
+      } 
     : undefined;
 
-  // 3. Fetch REAL data from Supabase
+  // 5. Fetch REAL leads data
   const leads = await getLeads(); 
 
-  // 4. Generate reminders
+  // 6. Generate reminders
   const myReminders = getReminders(leads);
 
   return (
@@ -41,7 +55,7 @@ export default async function Home() {
       initialData={leads} 
       department="all" 
       reminders={myReminders}
-      user={user} // <--- 5. Pass User to Dashboard
+      user={user} 
     />
   );
 }

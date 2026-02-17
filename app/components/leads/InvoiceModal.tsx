@@ -79,7 +79,7 @@ export default function InvoiceModal({ isOpen, onClose, lead }: InvoiceModalProp
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    
+    const cleanLogo = agency.logo ? agency.logo.trim() : null;
     const invoiceData = {
       invoiceNo: invoiceNumber,
       date: invoiceDate,
@@ -88,7 +88,7 @@ export default function InvoiceModal({ isOpen, onClose, lead }: InvoiceModalProp
       agencyPhone: agency.phone,
       agencyEmail: agency.email,
       agencyAddress: agency.address, // Added Address
-      agencyLogo: agency.logo,       // Added Logo
+      agencyLogo: cleanLogo,       // Added Logo
       
       clientName: lead.name,
       clientPhone: lead.phone,
