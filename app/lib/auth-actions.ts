@@ -30,7 +30,7 @@ export async function authenticate(prevState: string | undefined, formData: Form
   }
 }
 
-// --- 2. HANDLE REGISTRATION ---
+// --- 2. HANDLE REGISTRATION (Fixed Security) ---
 export async function register(prevState: string | undefined, formData: FormData) {
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;
@@ -40,9 +40,19 @@ export async function register(prevState: string | undefined, formData: FormData
   if (!email || !password || !name) return 'Missing fields';
 
   try {
+    // 1. Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) return 'User already exists.';
 
+    // 2. CHECK ALLOW LIST (The missing security gate)
+    const isAllowed = await prisma.allowedUser.findUnique({ where: { email } });
+    
+    // If the email is NOT in the AllowedUser table, stop everything.
+    if (!isAllowed) {
+      return 'Access Denied: This is a closed pilot. Your email is not on the invite list.';
+    }
+
+    // 3. Create the user
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await prisma.user.create({
@@ -76,7 +86,7 @@ export async function updateProfile(formData: FormData) {
   const phone = formData.get('phone') as string;
   const agencyName = formData.get('agencyName') as string;
   const agencyAddress = formData.get('agencyAddress') as string;
-  const logoUrl = formData.get('logoUrl') as string; // <--- The Logo String
+  const logoUrl = formData.get('logoUrl') as string; 
 
   try {
     await prisma.user.update({
@@ -99,10 +109,6 @@ export async function updateProfile(formData: FormData) {
   }
 }
 
-// app/lib/auth-actions.ts
-
-// ... existing code ...
-
 // --- 5. GET AGENCY DETAILS FOR INVOICE ---
 export async function getAgencyDetails() {
   const session = await auth();
@@ -115,7 +121,7 @@ export async function getAgencyDetails() {
   if (!user) return null;
 
   return {
-    name: user.agencyName || user.name || "Real Estate Agency", // Fallback if no agency name
+    name: user.agencyName || user.name || "Real Estate Agency", 
     phone: user.phone || "",
     email: user.email || "",
     address: user.agencyAddress || "",

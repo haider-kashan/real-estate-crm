@@ -119,3 +119,10 @@ model Invoice {
 
   @@map("invoices")
 }
+
+// 5. White list for pilot users
+model AllowedUser {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
