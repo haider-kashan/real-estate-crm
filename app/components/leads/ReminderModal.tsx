@@ -2,15 +2,23 @@
 
 import React from 'react';
 
+// 1. Updated interface to match parent props exactly
 interface ReminderModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentFollowUp: string | null | undefined;
-  onSetReminder: (isoDate: string) => void;
-  onRemoveReminder: () => void;
+  onSet: (isoDate: string) => void;    // Renamed from onSetReminder
+  onRemove: () => void;                // Renamed from onRemoveReminder
 }
 
-export default function ReminderModal({ isOpen, onClose, currentFollowUp, onSetReminder, onRemoveReminder }: ReminderModalProps) {
+// 2. Updated the destructured props here
+export default function ReminderModal({ 
+  isOpen, 
+  onClose, 
+  currentFollowUp, 
+  onSet, 
+  onRemove 
+}: ReminderModalProps) {
   
   if (!isOpen) return null;
 
@@ -21,15 +29,18 @@ export default function ReminderModal({ isOpen, onClose, currentFollowUp, onSetR
       date.setDate(date.getDate() + offsetDays);
       date.setHours(10, 0, 0, 0); // Default to 10 AM
     } else if (customDate) {
+      if (!customDate) return; // Quick safeguard
       date = new Date(customDate);
     }
 
-    onSetReminder(date.toISOString());
+    // 3. Call the newly named prop
+    onSet(date.toISOString());
     onClose();
   };
 
   const handleRemove = () => {
-    onRemoveReminder();
+    // 4. Call the newly named prop
+    onRemove();
     onClose();
   };
 
