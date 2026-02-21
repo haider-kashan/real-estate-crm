@@ -1,11 +1,10 @@
-// app/leads/[id]/LeadClient.tsx
 'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getLeadHealth } from '../../lib/utils';
-import { deleteLead, updateLead } from '../../actions'; // Removed getLead, the server handles it now
+import { deleteLead, updateLead } from '../../actions'; 
 
 // Component Imports
 import ShareLeadModal from '../../components/leads/ShareLeadModal';
@@ -17,7 +16,6 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
   const router = useRouter();
 
   // --- STATES ---
-  // Transform the database lead instantly on load. No more waiting!
   const [lead, setLead] = useState<any>(() => {
     if (!dbLead) return null;
     return {
@@ -38,8 +36,11 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
+  
+  // New States for the Slide-up Menu
+  const [isDocMenuOpen, setIsDocMenuOpen] = useState(false);
+  const [documentType, setDocumentType] = useState<'invoice' | 'receipt'>('invoice');
 
-  // If the server didn't find the lead, show the not found page instantly
   if (!lead) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50 p-6 text-center">
@@ -66,9 +67,7 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
   };
 
   const handleUpdateLead = async (updatedData: any) => {
-    setLead(updatedData); // Instant UI update
-    
-    // Flatten features for DB
+    setLead(updatedData); 
     const payload = {
       ...updatedData,
       hasBasement: updatedData.features?.hasBasement,
@@ -79,9 +78,8 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
     };
     try {
       const result = await updateLead(lead.id, payload);
-      
       if (result.success) {
-        setIsEditing(false); // Close modal on success
+        setIsEditing(false); 
       } else {
         alert("Failed to save to database.");
       }
@@ -125,10 +123,13 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
           <h1 className="text-lg font-bold leading-tight">{lead.name}</h1>
           <p className="text-xs text-white/80 font-medium uppercase tracking-wide">{lead.type} • {lead.status}</p>
         </div>
+        
         <div className="flex gap-1">
-          <button onClick={() => setIsInvoiceOpen(true)} className="p-2 hover:bg-white/20 rounded-full" title="Invoice">
+          {/* Changed this to open the bottom sheet menu instead of directly opening the invoice modal */}
+          <button onClick={() => setIsDocMenuOpen(true)} className="p-2 hover:bg-white/20 rounded-full" title="Create Document">
              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
           </button>
+          
           <button onClick={() => setIsReminderOpen(true)} className="p-2 hover:bg-white/20 rounded-full relative" title="Reminder">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
             {/* @ts-ignore */}
@@ -307,6 +308,48 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
         </div>
       </div>
 
+      {/* --- NEW BOTTOM SHEET FOR DOCUMENT TYPE --- */}
+      {isDocMenuOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
+          {/* Overlay to close */}
+          <div className="absolute inset-0" onClick={() => setIsDocMenuOpen(false)}></div>
+          
+          {/* Menu Drawer */}
+          <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 pb-12 relative animate-in slide-in-from-bottom-8 duration-300">
+            <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Create Document</h3>
+            
+            <div className="space-y-3">
+              <button 
+                onClick={() => { setDocumentType('invoice'); setIsInvoiceOpen(true); setIsDocMenuOpen(false); }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-100 active:scale-95 transition-all text-left"
+              >
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-2xl">
+                  📄
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">Create an invoice</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Bill your client for services</p>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => { setDocumentType('receipt'); setIsInvoiceOpen(true); setIsDocMenuOpen(false); }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-100 active:scale-95 transition-all text-left"
+              >
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-2xl">
+                  🧾
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">Create a receipt</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Proof of payment received</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* --- MODALS --- */}
       <ShareLeadModal 
         isOpen={isShareModalOpen} 
@@ -335,6 +378,7 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
         isOpen={isInvoiceOpen}
         onClose={() => setIsInvoiceOpen(false)}
         lead={lead}
+        type={documentType}
       />
 
     </div>

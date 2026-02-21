@@ -1,5 +1,5 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer'; // <--- Added Image
+import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
 
 // DARK THEME PROFESSIONAL STYLES
 const styles = StyleSheet.create({
@@ -10,21 +10,36 @@ const styles = StyleSheet.create({
   
   // Left: Logo & Agency Name
   headerLeft: { flexGrow: 1 },
-  // Updated LogoBox to handle images properly
-  logoBox: { width: 50, height: 50, backgroundColor: '#FFFFFF', marginBottom: 10, justifyContent: 'center', alignItems: 'center', borderRadius: 6, overflow: 'hidden' },
-  logoImage: { width: '100%', height: '100%', objectFit: 'cover' }, // <--- New style for Image
+  // UPGRADED LOGO BOX: White background, subtle border, prevents black transparency glitches
+  logoBox: { 
+    width: 60, 
+    height: 60, 
+    backgroundColor: '#FFFFFF', 
+    marginBottom: 10, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    borderRadius: 8, 
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e2e8f0'
+  },
+  logoImage: { 
+    width: '85%', 
+    height: '85%', 
+    objectFit: 'contain' 
+  },
   logoText: { fontSize: 24, fontWeight: 'bold', color: '#1e293b' },
   
   agencyName: { fontSize: 18, color: '#FFFFFF', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 },
   
-  // Right: Invoice Label
+  // Right: Invoice/Receipt Label
   headerRight: { alignItems: 'flex-end' },
   title: { fontSize: 32, color: '#FFFFFF', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 2 },
   invoiceDetail: { fontSize: 9, color: '#94a3b8', marginTop: 4 },
 
   // 2. INFO SECTION (Gray Background Strip)
   infoContainer: { flexDirection: 'row', backgroundColor: '#f1f5f9', padding: 20, paddingHorizontal: 30 },
-  infoCol: { width: '35%' }, // Slightly wider to fit addresses
+  infoCol: { width: '35%' }, 
   label: { fontSize: 8, color: '#64748b', textTransform: 'uppercase', marginBottom: 4, fontWeight: 'bold' },
   text: { fontSize: 10, color: '#334155', lineHeight: 1.4 },
   textBold: { fontSize: 10, color: '#0f172a', fontWeight: 'bold' },
@@ -72,13 +87,14 @@ const formatCurrency = (amount: number) =>
 
 interface InvoicePDFProps {
   data: {
+    documentType: 'invoice' | 'receipt'; 
     invoiceNo: string;
     date: string;
     agencyName: string;
     agencyPhone: string;
     agencyEmail: string;
-    agencyAddress: string;     // <--- ADDED
-    agencyLogo: string | null; // <--- ADDED
+    agencyAddress: string;     
+    agencyLogo: string | null; 
     clientName: string;
     clientPhone: string;
     propertyRef: string;
@@ -88,6 +104,8 @@ interface InvoicePDFProps {
 }
 
 export default function InvoicePDF({ data }: InvoicePDFProps) {
+  const isReceipt = data.documentType === 'receipt';
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -96,12 +114,11 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
         <View style={styles.headerContainer}>
           <View style={styles.headerLeft}>
             
-            {/* LOGO LOGIC: Show Image if exists, else Show First Letter */}
             <View style={styles.logoBox}>
               {data.agencyLogo && data.agencyLogo.startsWith('data:image') ? (
                 <Image
                   src={data.agencyLogo}
-                  style={{width: 50, height: 50, borderRadius: 6}}
+                  style={styles.logoImage} 
                 />
               ) : (
                 <Text style={styles.logoText}>
@@ -114,7 +131,9 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
           </View>
           
           <View style={styles.headerRight}>
-            <Text style={styles.title}>INVOICE</Text>
+            <Text style={styles.title}>
+              {isReceipt ? 'RECEIPT' : 'INVOICE'}
+            </Text>
             <Text style={styles.invoiceDetail}>NO: {data.invoiceNo}</Text>
             <Text style={styles.invoiceDetail}>DATE: {data.date}</Text>
           </View>
@@ -127,11 +146,10 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
             <Text style={styles.textBold}>{data.agencyName}</Text>
             <Text style={styles.text}>{data.agencyEmail}</Text>
             <Text style={styles.text}>{data.agencyPhone}</Text>
-            {/* ADDED ADDRESS HERE */}
             <Text style={styles.text}>{data.agencyAddress}</Text>
           </View>
           <View style={styles.infoCol}>
-            <Text style={styles.label}>Bill To (Client)</Text>
+            <Text style={styles.label}>{isReceipt ? 'Received From' : 'Bill To (Client)'}</Text>
             <Text style={styles.textBold}>{data.clientName}</Text>
             <Text style={styles.text}>{data.clientPhone}</Text>
           </View>
@@ -148,14 +166,12 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
 
         {/* 4. TABLE */}
         <View style={styles.tableContainer}>
-          {/* Table Header */}
           <View style={styles.tableHeader}>
             <Text style={[styles.th, styles.w10]}>#</Text>
             <Text style={[styles.th, styles.w60]}>Description</Text>
-            <Text style={[styles.th, styles.w30]}>Total (PKR)</Text>
+            <Text style={[styles.th, styles.w30]}>Amount (PKR)</Text>
           </View>
 
-          {/* Dynamic Rows */}
           {data.items.map((item, index) => (
             <View style={styles.tableRow} key={index}>
               <Text style={[styles.td, styles.w10]}>{index + 1}</Text>
@@ -173,7 +189,7 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
               <Text style={styles.totalValue}>{formatCurrency(data.total)}</Text>
             </View>
             <View style={styles.grandTotal}>
-              <Text style={styles.grandTotalText}>Grand Total</Text>
+              <Text style={styles.grandTotalText}>{isReceipt ? 'Total Paid' : 'Grand Total'}</Text>
               <Text style={styles.grandTotalText}>{formatCurrency(data.total)}</Text>
             </View>
           </View>
@@ -183,9 +199,22 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
         <View style={styles.footerContainer}>
           <View style={styles.notesBox}>
             <Text style={styles.noteTitle}>Notes:</Text>
-            <Text style={styles.noteText}>1. Payment is due within 7 days.</Text>
-            <Text style={styles.noteText}>2. Please make cheques payable to "{data.agencyName}".</Text>
-            <Text style={[styles.noteText, { marginTop: 10, fontStyle: 'italic' }]}>Thank you for your business!</Text>
+            
+            {/* DYNAMIC LOGIC FOR NOTES */}
+            {isReceipt ? (
+              <>
+                <Text style={styles.noteText}>1. This document serves as a formal receipt.</Text>
+                <Text style={styles.noteText}>2. The amount listed above has been paid in full.</Text>
+                <Text style={[styles.noteText, { marginTop: 10, fontStyle: 'italic', color: '#10b981', fontWeight: 'bold' }]}>Thank you for your trust!</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.noteText}>1. Payment is due within 7 days.</Text>
+                <Text style={styles.noteText}>2. Please make cheques payable to "{data.agencyName}".</Text>
+                <Text style={[styles.noteText, { marginTop: 10, fontStyle: 'italic' }]}>Thank you for your business!</Text>
+              </>
+            )}
+
           </View>
           
           <View style={styles.signBox}>
