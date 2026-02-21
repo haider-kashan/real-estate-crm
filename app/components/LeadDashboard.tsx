@@ -178,7 +178,13 @@ export default function LeadDashboard({
              const isInactive = ['dead', 'closed'].includes(lead.status);
 
              return (
-               <div key={lead.id} onClick={() => router.push(`/leads/${lead.id}`)} className="block bg-white p-3.5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 relative overflow-hidden active:scale-[0.98] transition-transform cursor-pointer">
+               // --- CHANGED FROM <div onClick> TO <Link prefetch={true}> ---
+               <Link 
+                 href={`/leads/${lead.id}`} 
+                 prefetch={true} 
+                 key={lead.id} 
+                 className="block bg-white p-3.5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 relative overflow-hidden active:scale-[0.98] transition-transform cursor-pointer"
+               >
                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${['buyer', 'seller'].includes(lead.type) ? (lead.type === 'buyer' ? 'bg-blue-500' : 'bg-orange-500') : (lead.type === 'tenant' ? 'bg-indigo-500' : 'bg-purple-500')}`}></div>
                  <div className="flex justify-between items-start pl-3">
                    <div>
@@ -213,7 +219,7 @@ export default function LeadDashboard({
                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{['buyer', 'tenant'].includes(lead.type) ? 'Budget Range' : 'Demand Price'}</p>
                    <div className="flex items-center gap-1"><p className={`font-bold text-sm ${['buyer', 'seller'].includes(lead.type) ? 'text-gray-900' : 'text-gray-900'}`}>{/* @ts-ignore */}{lead.budget || lead.demand}</p></div>
                  </div>
-               </div>
+               </Link>
              );
           })
         )}
