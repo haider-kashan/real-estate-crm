@@ -8,121 +8,95 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// --- 1. THE DEALER (USER) ---
 model User {
-  id        String   @id @default(uuid()) // Secure ID
-  email     String   @unique
-  password  String   // We will hash this later
-  name      String?
-  phone     String?  // Their WhatsApp number for support
-  
-  // Agency Profile (For Invoice Headers)
-  agencyName    String?
-  agencyAddress String?
-  logoUrl       String?
-  
-  // --- MANUAL SAAS CONTROL ---
-  // You change these fields directly in Supabase to grant access
-  plan             String    @default("free") // 'free', 'pro', 'enterprise'
-  isActive         Boolean   @default(true)   // set false to ban user
-  subscriptionEnds DateTime? // If null = Lifetime access. If set = Access until date.
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relationships (Everything belongs to the User)
-  leads     Lead[]
-  invoices  Invoice[]
-  notes     Note[]
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String
+  name             String?
+  phone            String?
+  agencyName       String?
+  agencyAddress    String?
+  logoUrl          String?
+  plan             String    @default("free")
+  isActive         Boolean   @default(true)
+  subscriptionEnds DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  invoices         Invoice[]
+  leads            Lead[]
+  notes            Note[]
 
   @@map("users")
 }
 
-// --- 2. THE LEADS (Linked to User) ---
 model Lead {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  
-  // LINK TO DEALER (Critical for SaaS)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Basic Info
-  name     String
-  phone    String
-  whatsapp String?
-  location String?
-  
-  // Classification
-  type   String   // buyer, seller, tenant, landlord
-  status String   @default("new") 
-  
-  // Property Specs
-  propertyType String? @map("property_type")
-  size         String?
-  budget       String? 
-  demand       String? 
-  floors       String?
-  bedrooms     String?
-  bathrooms    String?
-  
-  // Features
-  hasBasement       Boolean @default(false) @map("has_basement")
-  isCorner          Boolean @default(false) @map("is_corner")
-  isParkFacing      Boolean @default(false) @map("is_park_facing")
-  isMainRoad        Boolean @default(false) @map("is_main_road")
-  hasServantQuarter Boolean @default(false) @map("has_servant_quarter")
-  
-  // Extra
-  notes         String? 
-  lastContacted DateTime? @map("last_contacted")
-  followUp      DateTime? @map("follow_up")
-
-  // Relationships
-  logs     Note[]     
-  invoices Invoice[] 
+  id                Int       @id @default(autoincrement())
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  userId            String
+  name              String
+  phone             String
+  whatsapp          String?
+  location          String?
+  type              String
+  status            String    @default("new")
+  propertyType      String?   @map("property_type")
+  size              String?
+  budget            String?
+  demand            String?
+  floors            String?
+  bedrooms          String?
+  bathrooms         String?
+  hasBasement       Boolean   @default(false) @map("has_basement")
+  isCorner          Boolean   @default(false) @map("is_corner")
+  isParkFacing      Boolean   @default(false) @map("is_park_facing")
+  isMainRoad        Boolean   @default(false) @map("is_main_road")
+  hasServantQuarter Boolean   @default(false) @map("has_servant_quarter")
+  notes             String?
+  lastContacted     DateTime? @map("last_contacted")
+  followUp          DateTime? @map("follow_up")
+  invoices          Invoice[]
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs              Note[]
 
   @@map("leads")
 }
 
-// --- 3. NOTES ---
 model Note {
-  id        Int      @id @default(autoincrement())
-  content   String
-  type      String   // 'call', 'meeting', 'note'
-  date      DateTime @default(now())
-  
-  leadId    Int
-  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  id      Int      @id @default(autoincrement())
+  content String
+  type    String
+  date    DateTime @default(now())
+  leadId  Int
+  userId  String
+  lead    Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id])
 
   @@map("notes")
 }
 
-// --- 4. INVOICES (For Dealer's Clients) ---
 model Invoice {
-  id        String   @id @default(cuid()) 
-  createdAt DateTime @default(now())
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
   dueDate   DateTime?
   amount    Float
-  status    String   @default("pending") 
-  details   Json?    
-  
+  status    String    @default("pending")
+  details   Json?
   leadId    Int
-  lead      Lead     @relation(fields: [leadId], references: [id])
-  
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  lead      Lead      @relation(fields: [leadId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 
   @@map("invoices")
 }
 
-// 5. White list for pilot users
 model AllowedUser {
   id        String   @id @default(uuid())
   email     String   @unique
+  createdAt DateTime @default(now())
+}
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  eventName String   // e.g., "click_call", "click_whatsapp", "generate_invoice"
   createdAt DateTime @default(now())
 }
