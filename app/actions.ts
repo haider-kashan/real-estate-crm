@@ -140,3 +140,13 @@ export async function deleteLead(id: number) {
     return { success: false, error };
   }
 }
+
+export async function trackEvent(eventName: string) {
+  try {
+    await prisma.analyticsEvent.create({
+      data: { eventName }
+    });
+  } catch (error) {
+    console.error("Tracking failed:", error);
+  }
+}

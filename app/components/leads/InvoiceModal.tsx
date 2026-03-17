@@ -5,6 +5,7 @@ import { pdf } from '@react-pdf/renderer';
 import { Lead } from '../../lib/data';
 import InvoicePDF from './InvoicePDF';
 import { getAgencyDetails } from '../../lib/auth-actions'; 
+import { trackEvent } from '../../actions'; // <--- ADDED trackEvent
 
 interface InvoiceModalProps {
   isOpen: boolean;
@@ -16,14 +17,12 @@ interface InvoiceModalProps {
 export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceModalProps) {
   if (!isOpen) return null;
 
-  // --- STATE ---
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isFetchingAgency, setIsFetchingAgency] = useState(true); // <--- NEW: strict loading lock
+  const [isFetchingAgency, setIsFetchingAgency] = useState(true); 
   
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [invoiceNumber, setInvoiceNumber] = useState(`${type === 'receipt' ? 'REC' : 'INV'}-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`);
   
-  // Real Agency Data State (NO MORE UGLY PLACEHOLDER TEXT)
   const [agency, setAgency] = useState({
     name: "",
     phone: "",
@@ -43,10 +42,9 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
     setInvoiceNumber(`${type === 'receipt' ? 'REC' : 'INV'}-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`);
   }, [type, isOpen]);
 
-  // --- 1. FETCH AGENCY DATA ON MOUNT WITH STRICT LOCK ---
   useEffect(() => {
     const fetchAgency = async () => {
-      setIsFetchingAgency(true); // Lock the button
+      setIsFetchingAgency(true); 
       try {
         const data = await getAgencyDetails();
         if (data) {
@@ -61,7 +59,7 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
       } catch (error) {
         console.error("Failed to load agency:", error);
       } finally {
-        setIsFetchingAgency(false); // Unlock the button when done
+        setIsFetchingAgency(false); 
       }
     };
     
@@ -70,13 +68,11 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
     }
   }, [isOpen]);
 
-  // --- CALCULATE TOTAL AUTOMATICALLY ---
   useEffect(() => {
     const sum = items.reduce((acc, item) => acc + (parseFloat(item.amount.toString()) || 0), 0);
     setTotal(sum);
   }, [items]);
 
-  // --- HANDLERS ---
   const handleItemChange = (index: number, field: 'description' | 'amount', value: string | number) => {
     const newItems = [...items];
     // @ts-ignore
@@ -101,14 +97,14 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
       documentType: type,          
       invoiceNo: invoiceNumber,
       date: invoiceDate,
-      agencyName: agency.name || 'Agency', // Failsafe
-      agencyPhone: agency.phone,
-      agencyEmail: agency.email,
-      agencyAddress: agency.address, 
+      agencyName: agency.name || 'Agency', 
+      agencyPhone: agency.phone || '',
+      agencyEmail: agency.email || '',
+      agencyAddress: agency.address || '', 
       agencyLogo: cleanLogo,       
-      clientName: lead.name,
-      clientPhone: lead.phone,
-      propertyRef: `Commission for sale of ${lead.propertyType} in ${lead.location}`,
+      clientName: lead.name || 'Client',
+      clientPhone: lead.phone || '',
+      propertyRef: `Commission for sale of ${lead.propertyType || 'Property'} in ${lead.location || 'Unknown'}`,
       items: items,
       total: total
     };
@@ -122,6 +118,9 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      trackEvent(`generate_${type}`); // <-- TRACKER ADDED
+      
       setTimeout(() => onClose(), 500); 
     } catch (error) {
       console.error(error);
@@ -133,11 +132,7 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      
-      {/* MODAL CONTAINER */}
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        
-        {/* HEADER */}
         <div className="px-6 py-5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
           <div>
             <h3 className="font-extrabold text-xl text-gray-900 capitalize">Create {type}</h3>
@@ -148,9 +143,7 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
           </button>
         </div>
 
-        {/* SCROLLABLE BODY */}
         <div className="p-6 overflow-y-auto bg-gray-100 flex-1">
-          
           <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4 grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase">{type === 'receipt' ? 'Receipt #' : 'Invoice #'}</label>
@@ -172,22 +165,10 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
               {items.map((item, index) => (
                 <div key={index} className="flex gap-2 items-start">
                   <div className="flex-1">
-                    <input 
-                      type="text" 
-                      placeholder="Description (e.g. Downpayment)" 
-                      value={item.description}
-                      onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-400"
-                    />
+                    <input type="text" placeholder="Description (e.g. Downpayment)" value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value)} className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-400" />
                   </div>
                   <div className="w-32">
-                    <input 
-                      type="number" 
-                      placeholder="Amount" 
-                      value={item.amount}
-                      onChange={(e) => handleItemChange(index, 'amount', parseFloat(e.target.value))}
-                      className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-900 text-right focus:ring-2 focus:ring-blue-500 outline-none"
-                    />
+                    <input type="number" placeholder="Amount" value={item.amount} onChange={(e) => handleItemChange(index, 'amount', parseFloat(e.target.value))} className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-bold text-gray-900 text-right focus:ring-2 focus:ring-blue-500 outline-none" />
                   </div>
                   <button onClick={() => removeItem(index)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -204,21 +185,11 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
               </span>
             </div>
           </div>
-
         </div>
 
-        {/* FOOTER */}
         <div className="p-4 border-t border-gray-200 bg-white flex justify-end">
-          <button 
-            onClick={handleGenerate}
-            disabled={isGenerating || isFetchingAgency} // <--- LOCKED IF LOADING
-            className={`px-6 py-3 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all flex items-center gap-2 capitalize ${(isGenerating || isFetchingAgency) ? 'bg-gray-400' : 'bg-gray-900 hover:bg-black'}`}
-          >
-            {isFetchingAgency ? (
-              <span>Loading details...</span>
-            ) : isGenerating ? (
-              <span>Generating PDF...</span>
-            ) : (
+          <button onClick={handleGenerate} disabled={isGenerating || isFetchingAgency} className={`px-6 py-3 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-all flex items-center gap-2 capitalize ${(isGenerating || isFetchingAgency) ? 'bg-gray-400' : 'bg-gray-900 hover:bg-black'}`}>
+            {isFetchingAgency ? <span>Loading details...</span> : isGenerating ? <span>Generating PDF...</span> : (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 <span>Download {type}</span>
