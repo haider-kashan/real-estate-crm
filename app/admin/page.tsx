@@ -6,7 +6,7 @@ import prisma from '../lib/prisma';
 export default async function AdminDashboard() {
   // 1. STRICT SECURITY
   const session = await auth();
-  const adminEmail = "devtrixlabs@gmail.com"; // <--- ⚠️ CHANGE THIS TO YOUR LOGIN EMAIL ⚠️
+  const adminEmail = process.env.ADMIN_EMAIL; // <--- ⚠️ CHANGE THIS TO YOUR LOGIN EMAIL ⚠️
   
   if (!session?.user || session.user.email !== adminEmail) {
     redirect('/');
