@@ -38,12 +38,12 @@ export default function LeadDashboard({
     setIsLoadingMore(true);
     const nextLeads = await loadMoreLeads(offset);
     
-    if (nextLeads.length < 50) {
+    if (nextLeads.length < 20) {
       setHasMore(false); // No more leads to load after this
     }
     
     setCurrentLeads((prev) => [...prev, ...nextLeads]);
-    setOffset((prev) => prev + 50);
+    setOffset((prev) => prev + 20);
     setIsLoadingMore(false);
   };
 
@@ -52,8 +52,8 @@ export default function LeadDashboard({
   const accentBorder = department === 'sales' ? 'border-blue-600' : (department === 'rentals' ? 'border-indigo-600' : 'border-gray-900');
   const activeChipBg = department === 'sales' ? 'bg-blue-600' : (department === 'rentals' ? 'bg-indigo-600' : 'bg-gray-900');
   const statuses = ['all', 'new', 'contacted', 'interested', 'negotiation', 'closed', 'dead'];
-  const [offset, setOffset] = useState(50);
-  const [hasMore, setHasMore] = useState(initialData.length >= 50);
+  const [offset, setOffset] = useState(20);
+  const [hasMore, setHasMore] = useState(initialData.length >= 20);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function LeadDashboard({
     // this instantly updates the screen without a manual refresh!
     setCurrentLeads(initialData);
     setOffset(10);
-    setHasMore(initialData.length >= 10);
+    setHasMore(initialData.length >= 20);
   }, [initialData]);
 
   // --- 0. DATA TRANSLATION LAYER (Database -> UI) ---
