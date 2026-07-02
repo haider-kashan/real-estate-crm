@@ -6,6 +6,7 @@ import Link from 'next/link';
 import HeaderBar, { ReminderItem } from './HeaderBar';
 import AddLeadModal from './AddLead';
 import { parsePrice, getLeadHealth } from '../lib/utils';
+import { loadMoreLeads } from '../actions';
 
 interface LeadDashboardProps {
   title: string;
@@ -27,27 +28,43 @@ export default function LeadDashboard({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isModalOpen = searchParams.get('adding') === 'true';
-
+  const [currentLeads, setCurrentLeads] = useState(initialData); 
   const [activeTab, setActiveTab] = useState(tabs ? tabs[0].id : 'all');
   const [activeStatus, setActiveStatus] = useState('all');
   const [filters, setFilters] = useState({ location: '', minPrice: '', maxPrice: '', propertyType: '' });
   const [sortBy, setSortBy] = useState('newest');
+
+  const handleLoadMore = async () => {
+    setIsLoadingMore(true);
+    const nextLeads = await loadMoreLeads(offset);
+    
+    if (nextLeads.length < 50) {
+      setHasMore(false); // No more leads to load after this
+    }
+    
+    setCurrentLeads((prev) => [...prev, ...nextLeads]);
+    setOffset((prev) => prev + 50);
+    setIsLoadingMore(false);
+  };
 
   const theme = department === 'sales' ? 'blue' : (department === 'rentals' ? 'indigo' : 'white');
   const accentText = department === 'sales' ? 'text-blue-600' : (department === 'rentals' ? 'text-indigo-600' : 'text-gray-900');
   const accentBorder = department === 'sales' ? 'border-blue-600' : (department === 'rentals' ? 'border-indigo-600' : 'border-gray-900');
   const activeChipBg = department === 'sales' ? 'bg-blue-600' : (department === 'rentals' ? 'bg-indigo-600' : 'bg-gray-900');
   const statuses = ['all', 'new', 'contacted', 'interested', 'negotiation', 'closed', 'dead'];
+  const [offset, setOffset] = useState(50);
+  const [hasMore, setHasMore] = useState(initialData.length >= 50);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // --- 0. DATA TRANSLATION LAYER (Database -> UI) ---
   const processedData = useMemo(() => {
-    return initialData.map((lead) => ({
+    return currentLeads.map((lead) => ({
       ...lead,
       dateAdded: lead.createdAt || lead.dateAdded,
       lastContactDate: lead.lastContacted || lead.lastContactDate,
       id: lead.id, 
     }));
-  }, [initialData]);
+  }, [currentLeads]);
 
   // --- 1. ACTION CENTER LOGIC ---
   const urgentLeads = useMemo(() => {
@@ -181,7 +198,7 @@ export default function LeadDashboard({
                // --- CHANGED FROM <div onClick> TO <Link prefetch={true}> ---
                <Link 
                  href={`/leads/${lead.id}`} 
-                 prefetch={true} 
+                 prefetch={false} 
                  key={lead.id} 
                  className="block bg-white p-3.5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 relative overflow-hidden active:scale-[0.98] transition-transform cursor-pointer"
                >
@@ -222,6 +239,17 @@ export default function LeadDashboard({
                </Link>
              );
           })
+        )}
+        {hasMore && filteredLeads.length > 0 && activeTab === 'all' && (
+          <div className="flex justify-center pt-6 pb-10">
+            <button 
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+              className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-full shadow-sm active:scale-95 transition-all disabled:opacity-50"
+            >
+              {isLoadingMore ? 'Loading...' : 'Load Older Leads'}
+            </button>
+          </div>
         )}
       </div>
     </div>

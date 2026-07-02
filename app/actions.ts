@@ -28,6 +28,51 @@ export async function getLeads() {
     const leads = await prisma.lead.findMany({
       where: { userId: userId },
       orderBy: { createdAt: 'desc' },
+      take: 50,
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        status: true,
+        location: true,
+        phone: true,
+        budget: true,
+        demand: true,
+        propertyType: true,
+        createdAt: true,
+        lastContacted: true,
+        followUp: true,
+      }  
+    });
+    return leads;
+  } catch (error) {
+    console.error('Database Error:', error);
+    return [];
+  }
+}
+
+export async function loadMoreLeads(skipCount: number) {
+  try {
+    const userId = await getUserId();
+    const leads = await prisma.lead.findMany({
+      where: { userId: userId },
+      orderBy: { createdAt: 'desc' },
+      skip: skipCount, // <-- This tells Prisma to skip the leads we already have
+      take: 50,        // <-- Grab the next 50
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        status: true,
+        location: true,
+        phone: true,
+        budget: true,
+        demand: true,
+        propertyType: true,
+        createdAt: true,
+        lastContacted: true,
+        followUp: true,
+      }
     });
     return leads;
   } catch (error) {

@@ -59,6 +59,12 @@ model Lead {
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   logs              Note[]
 
+  // --- NEW PERFORMANCE INDEXES ---
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@index([userId])
+
   @@map("leads")
 }
 
@@ -95,8 +101,12 @@ model AllowedUser {
   email     String   @unique
   createdAt DateTime @default(now())
 }
+
 model AnalyticsEvent {
   id        String   @id @default(cuid())
   eventName String   // e.g., "click_call", "click_whatsapp", "generate_invoice"
   createdAt DateTime @default(now())
+
+  // --- NEW PERFORMANCE INDEX ---
+  @@index([eventName])
 }
