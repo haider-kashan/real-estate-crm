@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import React, { Suspense } from 'react';
 import { getLeads } from '../actions'; 
 import LeadDashboard from '../components/LeadDashboard';
