@@ -1,8 +1,8 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { auth } from '../auth'; 
-import prisma from './lib/prisma'; 
+import prisma from './lib/prisma';
 
 // --- HELPER: GET CURRENT USER ID ---
 async function getUserId() {
@@ -25,26 +25,28 @@ async function getUserId() {
 export async function getLeads() {
   try {
     const userId = await getUserId();
-    const leads = await prisma.lead.findMany({
-      where: { userId: userId },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-      select: {
-        id: true,
-        name: true,
-        type: true,
-        status: true,
-        location: true,
-        phone: true,
-        budget: true,
-        demand: true,
-        propertyType: true,
-        createdAt: true,
-        lastContacted: true,
-        followUp: true,
-      }  
-    });
-    return leads;
+    
+    // We wrap the Prisma query in a Vercel Cache
+    const getCachedData = unstable_cache(
+      async (uid) => {
+        return await prisma.lead.findMany({
+          where: { userId: uid },
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+          select: {
+            id: true, name: true, type: true, status: true, 
+            location: true, phone: true, budget: true, 
+            demand: true, propertyType: true, createdAt: true, 
+            lastContacted: true, followUp: true,
+          }
+        });
+      },
+      [`leads-key-${userId}`], // Unique key for this user
+      { tags: [`leads-${userId}`], revalidate: 3600 } // Cache it for 1 hour
+    );
+
+    // Call the cached function
+    return await getCachedData(userId);
   } catch (error) {
     console.error('Database Error:', error);
     return [];
@@ -58,7 +60,7 @@ export async function loadMoreLeads(skipCount: number) {
       where: { userId: userId },
       orderBy: { createdAt: 'desc' },
       skip: skipCount, // <-- This tells Prisma to skip the leads we already have
-      take: 50,        // <-- Grab the next 50
+      take: 10,        // <-- Grab the next 50
       select: {
         id: true,
         name: true,
@@ -127,6 +129,8 @@ export async function addLead(data: any) {
     });
     
     revalidatePath('/');
+    // @ts-ignore - Next.js 16 experimental profile arg bypass
+    revalidateTag(`leads-${userId}`);
     return { success: true, lead: newLead };
   } catch (error) {
     console.error('Failed to add lead:', error);
@@ -161,7 +165,9 @@ export async function updateLead(id: number, data: any) {
 
     revalidatePath(`/leads/${id}`);
     revalidatePath('/');
-    
+    // @ts-ignore - Next.js 16 experimental profile arg bypass
+    revalidateTag(`leads-${userId}`);
+
     return { success: true, lead: updatedLead };
   } catch (error) {
     console.error("Update Error:", error);
@@ -180,6 +186,8 @@ export async function deleteLead(id: number) {
       where: { id },
     });
     revalidatePath('/');
+    // @ts-ignore - Next.js 16 experimental profile arg bypass
+    revalidateTag(`leads-${userId}`);
     return { success: true };
   } catch (error) {
     return { success: false, error };
