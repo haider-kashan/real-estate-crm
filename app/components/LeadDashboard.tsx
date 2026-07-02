@@ -60,10 +60,10 @@ export default function LeadDashboard({
     // Whenever the server finishes adding a new lead and sends fresh data, 
     // this instantly updates the screen without a manual refresh!
     setCurrentLeads(initialData);
-    setOffset(50);
-    setHasMore(initialData.length >= 50);
+    setOffset(10);
+    setHasMore(initialData.length >= 10);
   }, [initialData]);
-  
+
   // --- 0. DATA TRANSLATION LAYER (Database -> UI) ---
   const processedData = useMemo(() => {
     return currentLeads.map((lead) => ({
@@ -203,10 +203,9 @@ export default function LeadDashboard({
              const isInactive = ['dead', 'closed'].includes(lead.status);
 
              return (
-               // --- CHANGED FROM <div onClick> TO <Link prefetch={true}> ---
+               // --- REMOVED PREFETCH PROP ENTIRELY TO ENABLE INTENT-BASED HOVER ---
                <Link 
                  href={`/leads/${lead.id}`} 
-                 prefetch={false} 
                  key={lead.id} 
                  className="block bg-white p-3.5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 relative overflow-hidden active:scale-[0.98] transition-transform cursor-pointer"
                >

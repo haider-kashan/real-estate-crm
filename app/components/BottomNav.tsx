@@ -32,8 +32,8 @@ function BottomNavContent() {
   return (
     <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-gray-100 flex justify-around items-center pb-safe pt-2 h-[80px] z-50 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.03)]">
       
-      {/* 1. ALL (Home) */}
-      <Link href="/" className={navItemClass}>
+      {/* 1. ALL (Home) - ADDED PREFETCH */}
+      <Link href="/" prefetch={true} className={navItemClass}>
         <div className={`${iconBaseClass} ${isActive('/') ? 'bg-gray-900 text-white shadow-md translate-y-0' : 'bg-transparent text-gray-400 group-hover:bg-gray-50 group-active:scale-90'}`}>
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         </div>
@@ -42,8 +42,8 @@ function BottomNavContent() {
         </span>
       </Link>
 
-      {/* 2. SALES */}
-      <Link href="/sales" className={navItemClass}>
+      {/* 2. SALES - ADDED PREFETCH */}
+      <Link href="/sales" prefetch={true} className={navItemClass}>
         <div className={`${iconBaseClass} ${isActive('/sales') ? 'bg-blue-600 text-white shadow-md shadow-blue-100 translate-y-0' : 'bg-transparent text-gray-400 group-hover:bg-blue-50 group-active:scale-90'}`}>
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
         </div>
@@ -52,8 +52,8 @@ function BottomNavContent() {
         </span>
       </Link>
 
-      {/* 3. RENTALS */}
-      <Link href="/rentals" className={navItemClass}>
+      {/* 3. RENTALS - ADDED PREFETCH */}
+      <Link href="/rentals" prefetch={true} className={navItemClass}>
         <div className={`${iconBaseClass} ${isActive('/rentals') ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100 translate-y-0' : 'bg-transparent text-gray-400 group-hover:bg-indigo-50 group-active:scale-90'}`}>
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
         </div>
