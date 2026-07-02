@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import HeaderBar, { ReminderItem } from './HeaderBar';
@@ -56,6 +56,14 @@ export default function LeadDashboard({
   const [hasMore, setHasMore] = useState(initialData.length >= 50);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
+  useEffect(() => {
+    // Whenever the server finishes adding a new lead and sends fresh data, 
+    // this instantly updates the screen without a manual refresh!
+    setCurrentLeads(initialData);
+    setOffset(50);
+    setHasMore(initialData.length >= 50);
+  }, [initialData]);
+  
   // --- 0. DATA TRANSLATION LAYER (Database -> UI) ---
   const processedData = useMemo(() => {
     return currentLeads.map((lead) => ({
