@@ -19,6 +19,10 @@ const transporter = nodemailer.createTransport({
 
 export async function authenticate(prevState: string | undefined, formData: FormData) {
   const email = formData.get('email') as string;
+  const password = formData.get('password') as string; 
+
+  if (!email || email.trim() === '') return 'Email cannot be empty.';
+  if (!password || password.trim() === '') return 'Password cannot be empty.';
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
@@ -63,7 +67,7 @@ export async function register(prevState: string | undefined, formData: FormData
     }
 
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
-    const codeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const codeExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
     const hashedPassword = await bcrypt.hash(password, 10);
 
     if (existingUser && !existingUser.isVerified) {
@@ -186,4 +190,42 @@ export async function getAgencyDetails() {
     address: user.agencyAddress || "",
     logo: user.logoUrl || null
   };
+}
+
+export async function resendVerificationCode(email: string) {
+  if (!email) return { error: 'Email is missing.' };
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    if (!user) return { error: 'User not found.' };
+    if (user.isVerified) return { error: 'Account is already verified.' };
+
+    // Generate a fresh code and new 2-minute expiration
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+    const codeExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
+
+    // Save to database
+    await prisma.user.update({
+      where: { email },
+      data: { verificationCode, codeExpiresAt }
+    });
+
+    // Send the new email
+    await transporter.sendMail({
+      from: '"Real Estate Leads" <devtrixlab@gmail.com>',
+      to: email,
+      subject: "Your New Verification Code",
+      html: `
+        <h2>Here is your new code!</h2>
+        <p>Your verification code is: <strong style="font-size: 24px; letter-spacing: 4px;">${verificationCode}</strong></p>
+        <p>This code expires in 2 minutes.</p>
+      `,
+    });
+
+    return { success: 'A new code has been sent to your email.' };
+  } catch (error) {
+    console.error('Resend Error:', error);
+    return { error: 'Failed to resend code. Please try again.' };
+  }
 }

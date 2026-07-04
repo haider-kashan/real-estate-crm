@@ -6,9 +6,6 @@ import Link from 'next/link';
 
 export default function RegisterPage() {
   const [state, dispatch, isPending] = useActionState(register, undefined);
-  
-  // Notice we completely removed the useEffect and useRouter! 
-  // The server action's redirect() handles the navigation now.
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-6">
@@ -35,6 +32,7 @@ export default function RegisterPage() {
             <input 
               name="agencyName" 
               type="text" 
+              required /* <-- Added this so it cannot be skipped */
               placeholder="Khan Estate" 
               className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-black focus:border-transparent placeholder:text-gray-400 text-gray-900" 
             />
@@ -61,7 +59,6 @@ export default function RegisterPage() {
             />
           </div>
           
-          {/* We simplified this check. Since 'success' is gone, if there is a state, it is ALWAYS an error message */}
           {state && (
             <div className="p-3 bg-red-50 border border-red-100 text-red-600 text-sm font-medium rounded-lg">
               ⚠️ {state}
