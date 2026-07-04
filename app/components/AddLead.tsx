@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { addLead } from '../actions'; // <--- 1. Import the Server Action
 
 interface AddLeadModalProps {
@@ -85,10 +85,36 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
 
     // --- VALIDATION CHECKS ---
     if (!formData.name.trim()) { alert("Please enter the Full Name."); return; }
-    if (!formData.phone.trim()) { alert("Please enter the Primary Call number."); return; }
-    
-    const priceValue = ['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand;
-    if (!priceValue?.trim()) { alert("Please enter the Budget/Demand price."); return; }
+if (!formData.phone.trim()) { alert("Please enter the Primary Call number."); return; }
+
+const priceValue = ['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand;
+
+if (!priceValue?.trim()) {
+  alert("Please enter the Budget/Demand price.");
+  return;
+}
+
+if (!/^03\d{9}$/.test(formData.phone)) {
+  alert("Phone number must be 11 digits and start with 03.");
+  return;
+}
+
+if (formData.whatsapp && !/^03\d{9}$/.test(formData.whatsapp)) {
+  alert("WhatsApp number must be 11 digits and start with 03.");
+  return;
+}
+
+if (!formData.location.trim()) {
+  alert("Please enter location.");
+  return;
+}
+
+if (!/^\d+$/.test(priceValue)) {
+  alert("Price must contain numbers only.");
+  return;
+}
+
+setLoading(true);
 
     setLoading(true); // Start Loading
 
@@ -264,11 +290,20 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
             
             <div>
               <label className="text-xs font-semibold text-gray-500 uppercase">Primary Call <span className="text-red-500">*</span></label>
-              <input type="tel" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
-                placeholder="0300-1234567"
-                value={formData.phone} 
-                onChange={(e) => setFormData({...formData, phone: e.target.value})} 
-              />
+              <input
+  type="text"
+  inputMode="numeric"
+  maxLength={11}
+  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+  placeholder="03001234567"
+  value={formData.phone}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      phone: e.target.value.replace(/\D/g, '')
+    })
+  }
+/>
             </div>
 
             <div>
@@ -282,12 +317,23 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
                   <span className="text-[10px] text-gray-500 font-medium">Same as above</span>
                 </label>
               </div>
-              <input type="tel" className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none ${useSamePhone ? 'bg-gray-100 text-gray-500' : ''}`} 
-                placeholder="0300-1234567"
-                value={formData.whatsapp || formData.phone} 
-                onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-                disabled={useSamePhone}
-              />
+              <input
+  type="text"
+  inputMode="numeric"
+  maxLength={11}
+  className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none ${
+    useSamePhone ? 'bg-gray-100 text-gray-500' : ''
+  }`}
+  placeholder="03001234567"
+  value={formData.whatsapp}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      whatsapp: e.target.value.replace(/\D/g, '')
+    })
+  }
+  disabled={useSamePhone}
+/>
             </div>
           </div>
 
@@ -320,25 +366,71 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
              </div>
              
              <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase">
-                  {['buyer', 'tenant'].includes(role) ? 'Max Budget' : 'Demand Price'} <span className="text-red-500">*</span>
-                </label>
-                <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 font-semibold outline-none" 
-                    value={['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand} 
-                    onChange={(e) => {
-                        const val = e.target.value;
-                        if(['buyer', 'tenant'].includes(role)) setFormData({...formData, budget: val, demand: ''});
-                        else setFormData({...formData, demand: val, budget: ''});
-                    }} 
-                />
-             </div>
+  <label className="text-xs font-semibold text-gray-500 uppercase">
+    {['buyer', 'tenant'].includes(role) ? 'Max Budget' : 'Demand Price'} <span className="text-red-500">*</span>
+  </label>
+
+  <input
+    type="text"
+    inputMode="numeric"
+    pattern="[0-9]*"
+    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 font-semibold outline-none"
+    placeholder="Enter amount"
+    value={['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand}
+    onKeyDown={(e) => {
+      if (
+        !/[0-9]/.test(e.key) &&
+        ![
+          'Backspace',
+          'Delete',
+          'ArrowLeft',
+          'ArrowRight',
+          'Tab',
+          'Home',
+          'End'
+        ].includes(e.key)
+      ) {
+        e.preventDefault();
+      }
+    }}
+    onChange={(e) => {
+      const val = e.target.value.replace(/\D/g, '');
+
+      if (['buyer', 'tenant'].includes(role)) {
+        setFormData({
+          ...formData,
+          budget: val,
+          demand: ''
+        });
+      } else {
+        setFormData({
+          ...formData,
+          demand: val,
+          budget: ''
+        });
+      }
+    }}
+  />
+</div>
 
              <div className="grid grid-cols-3 gap-3">
                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase">Floors</label>
-                    <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none" 
-                      value={formData.floors} onChange={(e) => setFormData({...formData, floors: e.target.value})} 
-                    />
+                 <label className="text-xs font-semibold text-gray-500 uppercase">
+    Floors
+  </label>
+                 <input
+  type="number"
+  min="0"
+  max="50"
+  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none"
+  value={formData.floors}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      floors: e.target.value
+    })
+  }
+/>
                  </div>
                  <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase">Beds</label>
