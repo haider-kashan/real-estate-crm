@@ -9,6 +9,7 @@ function LoginForm() {
   const [errorMessage, dispatch, isPending] = useActionState(authenticate, undefined);
   const searchParams = useSearchParams();
   const isVerified = searchParams.get('verified') === 'true';
+  const isReset = searchParams.get('reset') === 'true';
 
   return (
     <div className="w-full max-w-sm bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
@@ -17,14 +18,13 @@ function LoginForm() {
         <p className="text-sm text-gray-600 mt-2">Sign in to manage your leads</p>
       </div>
       
-      {isVerified && (
+      {(isVerified || isReset) && (
         <div className="mb-6 p-3 bg-green-50 border border-green-200 text-green-700 text-sm font-medium rounded-lg text-center shadow-sm">
-          ✅ Email verified successfully! You can now log in.
+          ✅ {isVerified ? 'Email verified successfully!' : 'Password reset successfully!'} You can now log in.
         </div>
       )}
       
       <form action={dispatch} className="space-y-4">
-        {/* RESTORED INPUTS WITH REQUIRED VALIDATION */}
         <div>
           <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Email</label>
           <input 
@@ -45,6 +45,12 @@ function LoginForm() {
             placeholder="••••••••" 
             className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all placeholder:text-gray-400 text-gray-900" 
           />
+        </div>
+
+        <div className="flex justify-end mt-1">
+          <Link href="/forgot-password" className="text-xs font-bold text-gray-500 hover:text-black transition-colors">
+            Forgot password?
+          </Link>
         </div>
         
         {errorMessage && (

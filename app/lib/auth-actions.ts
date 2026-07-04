@@ -17,6 +17,39 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+function canSendCode(user: any) {
+  if (!user || !user.lastCodeSentAt) return true;
+  
+  const now = new Date();
+  const lastSent = new Date(user.lastCodeSentAt);
+  const isSameDay = lastSent.getDate() === now.getDate() && 
+                    lastSent.getMonth() === now.getMonth() && 
+                    lastSent.getFullYear() === now.getFullYear();
+
+  if (isSameDay && user.dailyCodeCount >= 3) {
+    return false; // Limit reached
+  }
+  return true;
+}
+
+function getRateLimitData(user: any) {
+  const now = new Date();
+  let newCount = 1;
+  
+  if (user && user.lastCodeSentAt) {
+    const lastSent = new Date(user.lastCodeSentAt);
+    const isSameDay = lastSent.getDate() === now.getDate() && 
+                      lastSent.getMonth() === now.getMonth() && 
+                      lastSent.getFullYear() === now.getFullYear();
+    
+    if (isSameDay) {
+      newCount = (user.dailyCodeCount || 0) + 1;
+    }
+  }
+  
+  return { dailyCodeCount: newCount, lastCodeSentAt: now };
+}
+
 export async function authenticate(prevState: string | undefined, formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string; 
@@ -65,15 +98,17 @@ export async function register(prevState: string | undefined, formData: FormData
     if (existingUser && existingUser.isVerified) {
       return 'User already exists.';
     }
-
+    if (!canSendCode(existingUser)) return 'Daily email limit reached (3/day). Please try again tomorrow.'; 
+    
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
     const codeExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
     const hashedPassword = await bcrypt.hash(password, 10);
+    const rateData = getRateLimitData(existingUser);
 
     if (existingUser && !existingUser.isVerified) {
       await prisma.user.update({
         where: { email },
-        data: { password: hashedPassword, verificationCode, codeExpiresAt, name, agencyName }
+        data: { password: hashedPassword, verificationCode, codeExpiresAt, name, agencyName, ...rateData }
       });
     } else {
       await prisma.user.create({
@@ -85,7 +120,8 @@ export async function register(prevState: string | undefined, formData: FormData
           plan: 'free',
           isVerified: false,
           verificationCode,
-          codeExpiresAt
+          codeExpiresAt,
+          ...rateData
         },
       });
     }
@@ -200,15 +236,16 @@ export async function resendVerificationCode(email: string) {
     
     if (!user) return { error: 'User not found.' };
     if (user.isVerified) return { error: 'Account is already verified.' };
+    if (!canSendCode(user)) return { error: 'Daily limit reached (3/day). Please try again tomorrow.' };
 
     // Generate a fresh code and new 2-minute expiration
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
     const codeExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
-
+    const rateData = getRateLimitData(user);
     // Save to database
     await prisma.user.update({
       where: { email },
-      data: { verificationCode, codeExpiresAt }
+      data: { verificationCode, codeExpiresAt, ...rateData }
     });
 
     // Send the new email
@@ -227,5 +264,82 @@ export async function resendVerificationCode(email: string) {
   } catch (error) {
     console.error('Resend Error:', error);
     return { error: 'Failed to resend code. Please try again.' };
+  }
+}
+
+// --- 7. REQUEST PASSWORD RESET ---
+export async function requestPasswordReset(prevState: string | undefined, formData: FormData) {
+  const email = (formData.get('email') as string)?.trim();
+  
+  if (!email) return 'Email cannot be empty.';
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    // Security Best Practice: We do not reveal if the email exists or not to prevent attackers from guessing emails.
+    if (!user) {
+      redirect(`/reset-password?email=${encodeURIComponent(email)}`);
+    }
+    if (!canSendCode(user)) return 'Daily limit reached (3/day). Please try again tomorrow.';
+    // Generate code (10-minute expiration)
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+    const codeExpiresAt = new Date(Date.now() + 3 * 60 * 1000);
+    const rateData = getRateLimitData(user);
+    await prisma.user.update({
+      where: { email },
+      data: { verificationCode, codeExpiresAt, ...rateData }
+    });
+
+    await transporter.sendMail({
+      from: '"Real Estate Leads" <devtrixlab@gmail.com>',
+      to: email,
+      subject: "Password Reset Request",
+      html: `
+        <h2>Password Reset</h2>
+        <p>Your password reset code is: <strong style="font-size: 24px; letter-spacing: 4px;">${verificationCode}</strong></p>
+        <p>This code expires in 3 minutes. If you did not request this, please ignore this email.</p>
+      `,
+    });
+  } catch (error) {
+    console.error('Password Reset Request Error:', error);
+    return 'Failed to process request. Please try again.';
+  }
+
+  redirect(`/reset-password?email=${encodeURIComponent(email)}`);
+}
+
+// --- 8. RESET PASSWORD ---
+export async function resetPassword(prevState: string | undefined, formData: FormData) {
+  const email = (formData.get('email') as string)?.trim();
+  const code = (formData.get('code') as string)?.trim();
+  const newPassword = (formData.get('newPassword') as string)?.trim();
+
+  if (!email || !code || !newPassword) return 'All fields are required.';
+  if (newPassword.length < 6) return 'Password must be at least 6 characters long.';
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) return 'Invalid request.';
+    if (user.verificationCode !== Number(code)) return 'Invalid reset code.';
+    if (!user.codeExpiresAt || user.codeExpiresAt < new Date()) return 'Reset code has expired.';
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Save it and clear the reset codes
+    await prisma.user.update({
+      where: { email },
+      data: {
+        password: hashedPassword,
+        verificationCode: null,
+        codeExpiresAt: null,
+      }
+    });
+
+    return 'success';
+  } catch (error) {
+    console.error('Password Reset Error:', error);
+    return 'Failed to reset password. Please try again.';
   }
 }

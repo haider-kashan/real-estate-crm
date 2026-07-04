@@ -28,6 +28,8 @@ model User {
   isVerified       Boolean   @default(false)
   verificationCode Int?
   codeExpiresAt    DateTime?
+  dailyCodeCount   Int       @default(0)
+  lastCodeSentAt   DateTime?
 
   @@map("users")
 }
