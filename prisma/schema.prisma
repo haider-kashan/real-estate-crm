@@ -25,6 +25,9 @@ model User {
   invoices         Invoice[]
   leads            Lead[]
   notes            Note[]
+  isVerified       Boolean   @default(false)
+  verificationCode Int?
+  codeExpiresAt    DateTime?
 
   @@map("users")
 }

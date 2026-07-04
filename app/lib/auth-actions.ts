@@ -1,15 +1,32 @@
 'use server';
 
-import { signIn, signOut } from '../../auth';
+import { signIn, signOut, auth } from '../../auth';
 import { AuthError } from 'next-auth';
 import prisma from './prisma';
 import bcrypt from 'bcryptjs';
 import { revalidatePath } from 'next/cache';
-import { auth } from '../../auth';
+import nodemailer from 'nodemailer';
+import { redirect } from 'next/navigation';
 
-// --- 1. HANDLE LOGIN ---
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "sandbox.smtp.mailtrap.io",
+  port: Number(process.env.SMTP_PORT) || 2525,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
 export async function authenticate(prevState: string | undefined, formData: FormData) {
+  const email = formData.get('email') as string;
+
   try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    if (user && !user.isVerified) {
+      return 'Please verify your email before logging in.';
+    }
+
     await signIn('credentials', {
       ...Object.fromEntries(formData),
       redirectTo: '/',
@@ -30,7 +47,6 @@ export async function authenticate(prevState: string | undefined, formData: Form
   }
 }
 
-// --- 2. HANDLE REGISTRATION (Fixed Security) ---
 export async function register(prevState: string | undefined, formData: FormData) {
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;
@@ -38,70 +54,113 @@ export async function register(prevState: string | undefined, formData: FormData
   const agencyName = formData.get('agencyName') as string;
 
   if (!email || !password || !name) return 'Missing fields';
-
+  if (password.length < 6) return 'Password must be at least 6 characters long.';
   try {
-    // 1. Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) return 'User already exists.';
-
-    // 2. CHECK ALLOW LIST (The missing security gate)
-    const isAllowed = await prisma.allowedUser.findUnique({ where: { email } });
     
-    // If the email is NOT in the AllowedUser table, stop everything.
-    if (!isAllowed) {
-      return 'Access Denied: This is a closed pilot. Your email is not on the invite list.';
+    if (existingUser && existingUser.isVerified) {
+      return 'User already exists.';
     }
 
-    // 3. Create the user
+    const verificationCode = Math.floor(100000 + Math.random() * 900000);
+    const codeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        agencyName,
-        plan: 'free',
-      },
+    if (existingUser && !existingUser.isVerified) {
+      await prisma.user.update({
+        where: { email },
+        data: { password: hashedPassword, verificationCode, codeExpiresAt, name, agencyName }
+      });
+    } else {
+      await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          agencyName,
+          plan: 'free',
+          isVerified: false,
+          verificationCode,
+          codeExpiresAt
+        },
+      });
+    }
+
+    await transporter.sendMail({
+      from: '"Real Estate Leads" <devtrixlab@gmail.com>',
+      to: email,
+      subject: "Verify your account",
+      html: `
+        <h2>Welcome, ${name}!</h2>
+        <p>Your verification code is: <strong style="font-size: 24px; letter-spacing: 4px;">${verificationCode}</strong></p>
+        <p>This code expires in 15 minutes.</p>
+      `,
     });
 
-    return 'success';
   } catch (error) {
     console.error('Registration Error:', error);
     return 'Failed to create user.';
   }
+
+  redirect(`/verify?email=${encodeURIComponent(email)}`);
 }
 
-// --- 3. HANDLE LOGOUT ---
+export async function verifyEmail(prevState: any, formData: FormData) {
+  const email = formData.get('email') as string;
+  const code = formData.get('code') as string;
+
+  if (!email || !code) return 'Missing information.';
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) return 'User not found.';
+    if (user.isVerified) return 'User is already verified.';
+    if (user.verificationCode !== Number(code)) return 'Invalid verification code.';
+    if (!user.codeExpiresAt || user.codeExpiresAt < new Date()) {
+      return 'Verification code has expired. Please register again.';
+    }
+
+    await prisma.user.update({
+      where: { email },
+      data: {
+        isVerified: true,
+        verificationCode: null,
+        codeExpiresAt: null,
+      }
+    });
+
+    return 'success';
+  } catch (error) {
+    console.error('Verification Error:', error);
+    return 'Verification failed. Please try again.';
+  }
+}
+
 export async function logout() {
   await signOut({ redirectTo: '/login' });
 }
 
-// --- 4. UPDATE PROFILE (With Logo) ---
 export async function updateProfile(formData: FormData) {
   const session = await auth();
+
   if (!session?.user?.email) return { error: "Not authenticated" };
 
   const name = formData.get('name') as string;
   const phone = formData.get('phone') as string;
   const agencyName = formData.get('agencyName') as string;
   const agencyAddress = formData.get('agencyAddress') as string;
-  const logoUrl = formData.get('logoUrl') as string; 
+  const logoUrl = formData.get('logoUrl') as string;
 
   try {
     await prisma.user.update({
       where: { email: session.user.email },
-      data: {
-        name,
-        phone,
-        agencyName,
-        agencyAddress,
-        logoUrl, 
-      },
+      data: { name, phone, agencyName, agencyAddress, logoUrl },
     });
 
     revalidatePath('/profile');
-    revalidatePath('/'); 
+    revalidatePath('/');
+    
     return { success: "Profile updated successfully!" };
   } catch (error) {
     console.error("Update failed:", error);
@@ -109,9 +168,9 @@ export async function updateProfile(formData: FormData) {
   }
 }
 
-// --- 5. GET AGENCY DETAILS FOR INVOICE ---
 export async function getAgencyDetails() {
   const session = await auth();
+  
   if (!session?.user?.email) return null;
 
   const user = await prisma.user.findUnique({
@@ -121,7 +180,7 @@ export async function getAgencyDetails() {
   if (!user) return null;
 
   return {
-    name: user.agencyName || user.name || "Real Estate Agency", 
+    name: user.agencyName || user.name || "Real Estate Agency",
     phone: user.phone || "",
     email: user.email || "",
     address: user.agencyAddress || "",
