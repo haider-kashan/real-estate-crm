@@ -1,12 +1,12 @@
 'use client';
 
+import React, { useState, useMemo, useEffect } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import { loadMoreLeads } from '../actions';
-import { getLeadHealth, parsePrice } from '../lib/utils';
-import AddLeadModal from './AddLead';
 import HeaderBar, { ReminderItem } from './HeaderBar';
+import AddLeadModal from './AddLead';
+import { parsePrice, getLeadHealth } from '../lib/utils';
+import { loadMoreLeads } from '../actions';
 
 interface LeadDashboardProps {
   title: string;
