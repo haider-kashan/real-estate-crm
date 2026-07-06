@@ -150,6 +150,23 @@ export default function LeadDashboard({
     return result;
   }, [filters, sortBy, activeTab, activeStatus, processedData]);
 
+  // Helper function to return dynamic styling for lead types
+  const getTypeBadgeStyles = (type: string) => {
+    const normalizedType = (type || '').toLowerCase();
+    switch (normalizedType) {
+      case 'buyer':
+        return 'bg-blue-50 text-blue-700 border-blue-100';
+      case 'seller':
+        return 'bg-orange-50 text-orange-700 border-orange-100';
+      case 'tenant':
+        return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+      case 'landlord':
+        return 'bg-purple-50 text-purple-700 border-purple-100';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-100';
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       
@@ -211,9 +228,16 @@ export default function LeadDashboard({
                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${['buyer', 'seller'].includes(lead.type) ? (lead.type === 'buyer' ? 'bg-blue-500' : 'bg-orange-500') : (lead.type === 'tenant' ? 'bg-indigo-500' : 'bg-purple-500')}`}></div>
                  <div className="flex justify-between items-start pl-3">
                    <div>
-                     <div className="flex items-center gap-2">
+                     <div className="flex items-center gap-2 flex-wrap">
                        <h3 className="font-extrabold text-gray-900 text-base">{lead.name}</h3>
                        
+                       {/* DYNAMIC ROLE BADGE (Tenant, Landlord, Buyer, Seller) */}
+                       {lead.type && (
+                         <span className={`px-1.5 py-0.5 rounded border text-[9px] font-extrabold uppercase tracking-wider ${getTypeBadgeStyles(lead.type)}`}>
+                           {lead.type}
+                         </span>
+                       )}
+
                        {/* HEALTH DOT - Render ONLY if active */}
                        {!isInactive && (
                          <div className={`w-2.5 h-2.5 rounded-full ${health.color} border-2 border-white shadow-sm`} title={`Health: ${health.status} (${health.days}d)`}></div>
