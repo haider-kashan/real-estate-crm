@@ -30,6 +30,8 @@ model User {
   codeExpiresAt    DateTime?
   dailyCodeCount   Int       @default(0)
   lastCodeSentAt   DateTime?
+  failedLoginAttempts Int       @default(0)
+  lockoutUntil        DateTime?
 
   @@map("users")
 }

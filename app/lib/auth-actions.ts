@@ -59,7 +59,10 @@ export async function authenticate(prevState: string | undefined, formData: Form
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
-    
+    if (user?.lockoutUntil && user.lockoutUntil > new Date()) {
+      const minutesLeft = Math.ceil((user.lockoutUntil.getTime() - Date.now()) / 60000);
+      return `Account locked due to too many failed attempts. Try again in ${minutesLeft} minutes.`;
+    }
     if (user && !user.isVerified) {
       return 'Please verify your email before logging in.';
     }
@@ -71,6 +74,9 @@ export async function authenticate(prevState: string | undefined, formData: Form
   } catch (error) {
     if ((error as Error).message.includes('NEXT_REDIRECT')) {
       throw error;
+    }
+    if ((error as Error).message.includes('ACCOUNT_LOCKED')) {
+      return 'Account locked due to too many failed attempts. Try again in 15 minutes.';
     }
     if (error instanceof AuthError) {
       switch (error.type) {
