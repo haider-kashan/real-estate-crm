@@ -57,12 +57,11 @@ export default function LeadDashboard({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
-    // Whenever the server finishes adding a new lead and sends fresh data, 
-    // this instantly updates the screen without a manual refresh!
     setCurrentLeads(initialData);
     setOffset(10);
     setHasMore(initialData.length >= 20);
   }, [initialData]);
+
 
   // --- 0. DATA TRANSLATION LAYER (Database -> UI) ---
   const processedData = useMemo(() => {
