@@ -30,12 +30,11 @@ jobs:
         with:
           version: 11
 
-      # 3. Set up Node.js with native pnpm caching
+      # 3. Set up Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
       # 5. Install dependencies
       - name: Install dependencies
