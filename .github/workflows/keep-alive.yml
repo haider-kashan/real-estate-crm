@@ -1,0 +1,45 @@
+# =============================================================================
+# Supabase Keep-Alive — Prevents free-tier database from pausing
+# =============================================================================
+# Supabase pauses free-tier databases after 7 days of inactivity.
+# This workflow pings the /api/keep-alive endpoint every 6 days to prevent that.
+#
+# SETUP REQUIRED:
+# 1. Go to GitHub repo → Settings → Secrets and variables → Actions
+# 2. Add these repository secrets:
+#    - CRON_SECRET:      The same value as in your .env / Vercel env vars
+#    - PRODUCTION_URL:   Your deployed Vercel URL (e.g., https://real-estate-crm.vercel.app)
+# =============================================================================
+
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Run at midnight UTC every 6 days (Supabase pauses after 7 days)
+    - cron: '0 0 */6 * *'
+
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping Database
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send keep-alive request
+        run: |
+          echo "🏓 Pinging database at $(date -u)"
+          
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.PRODUCTION_URL }}/api/keep-alive")
+          
+          echo "Response status: $RESPONSE"
+          
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "✅ Database is alive!"
+          else
+            echo "❌ Keep-alive failed with status: $RESPONSE"
+            exit 1
+          fi

@@ -1,0 +1,76 @@
+# =============================================================================
+# CI Pipeline — Runs on every Pull Request to main and dev
+# =============================================================================
+# Purpose: Catch lint errors, type errors, and build failures BEFORE merging.
+# This is your automated code quality gate.
+# =============================================================================
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main, dev]
+  # Also run on direct pushes to main/dev (as a safety net)
+  push:
+    branches: [main, dev]
+
+jobs:
+  lint-and-build:
+    name: Lint & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js (match your project's version)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 3. Install pnpm (we enforce pnpm, never npm/yarn)
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      # 4. Cache pnpm store for faster subsequent runs
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      # 5. Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 6. Run ESLint
+      # TODO: Remove continue-on-error once pre-existing lint debt is resolved.
+      # Currently 71 pre-existing issues prevent lint from passing cleanly.
+      # Tracked for cleanup in a future PR.
+      - name: Lint
+        continue-on-error: true
+        run: pnpm lint
+
+      # 7. Build the project (catches TypeScript errors + Next.js issues)
+      # We provide dummy env vars so the build doesn't fail on missing secrets.
+      # The build step validates types and route correctness, not runtime behavior.
+      - name: Build
+        env:
+          DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+          DIRECT_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+          AUTH_SECRET: "ci-build-placeholder-secret-not-real"
+          AUTH_URL: "http://localhost:3000"
+          AUTH_TRUST_HOST: "true"
+          ADMIN_EMAIL: "ci@placeholder.com"
+          CRON_SECRET: "ci-placeholder"
+        run: pnpm build
