@@ -1,5 +1,5 @@
 'use server';
-
+import { demoLeads } from './dummy-data';
 import { signIn, signOut, auth } from '../../auth';
 import { AuthError } from 'next-auth';
 import prisma from './prisma';
@@ -347,5 +347,61 @@ export async function resetPassword(prevState: string | undefined, formData: For
   } catch (error) {
     console.error('Password Reset Error:', error);
     return 'Failed to reset password. Please try again.';
+  }
+}
+
+// --- 10. GENERATE DEMO ACCOUNT (Ephemeral Sandbox) ---
+export async function createDemoAccount() {
+  try {
+    // 1. GENERATE UNIQUE CREDENTIALS
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const demoEmail = `demo_${randomId}@trydemo.com`;
+    const demoPassword = 'demopassword123'; 
+    const hashedPassword = await bcrypt.hash(demoPassword, 10);
+
+    // 2. CREATE THE USER
+    const demoUser = await prisma.user.create({
+      data: {
+        name: 'Demo Agent',
+        agencyName: 'Demo Real Estate',
+        email: demoEmail,
+        password: hashedPassword,
+        isVerified: true, 
+        isDemo: true,     // Flag them for Vercel Cron deletion
+        plan: 'free',
+      }
+    });
+
+    // 3. INJECT DUMMY DATA WITH NESTED RELATIONS
+    await Promise.all(
+      demoLeads.map(async (dummy: any) => {
+        return prisma.lead.create({
+          data: {
+            ...dummy.leadInfo,
+            userId: demoUser.id,
+            logs: {
+              create: dummy.logs.map((log: any) => ({ ...log, userId: demoUser.id }))
+            },
+            invoices: {
+              create: dummy.invoices.map((invoice: any) => ({ ...invoice, userId: demoUser.id }))
+            }
+          }
+        });
+      })
+    );
+
+    // 4. SIGN THEM IN AUTOMATICALLY
+    await signIn('credentials', {
+      email: demoEmail,
+      password: demoPassword,
+      redirectTo: '/',
+    });
+
+  } catch (error) {
+    if ((error as Error).message.includes('NEXT_REDIRECT')) {
+      throw error; 
+    }
+    console.error('Demo Account Creation Error:', error);
+    return 'Failed to generate demo account.';
   }
 }

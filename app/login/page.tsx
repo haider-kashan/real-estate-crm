@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, Suspense } from 'react';
-import { authenticate } from '../lib/auth-actions';
+import { authenticate, createDemoAccount } from '../lib/auth-actions';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -67,6 +67,27 @@ function LoginForm() {
           {isPending ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
+
+      {/* --- NEW DEMO BUTTON SECTION --- */}
+      <div className="mt-4 relative flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200"></div>
+        </div>
+        <div className="relative bg-white px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+          Or
+        </div>
+      </div>
+
+      <form action={async () => { await createDemoAccount(); }} className="mt-4">
+        <button 
+          type="submit" 
+          className="w-full py-3.5 bg-white text-black font-bold rounded-xl border-2 border-gray-200 hover:border-black hover:bg-gray-50 transition-all active:scale-95 flex justify-center items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h10"/><path d="M9 4v16"/><path d="m3 9 3 3-3 3"/></svg>
+          Try Demo Account
+        </button>
+      </form>
+      {/* ------------------------------- */}
       
       <div className="mt-6 text-center text-sm text-gray-500">
         Don't have an account? <Link href="/register" className="font-bold text-black hover:underline">Register here</Link>

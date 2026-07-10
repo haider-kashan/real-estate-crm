@@ -32,6 +32,7 @@ model User {
   lastCodeSentAt   DateTime?
   failedLoginAttempts Int       @default(0)
   lockoutUntil        DateTime?
+  isDemo              Boolean   @default(false)
 
   @@map("users")
 }
@@ -83,8 +84,7 @@ model Note {
   leadId  Int
   userId  String
   lead    Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  user    User     @relation(fields: [userId], references: [id])
-
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@map("notes")
 }
 
@@ -98,7 +98,7 @@ model Invoice {
   leadId    Int
   userId    String
   lead      Lead      @relation(fields: [leadId], references: [id])
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("invoices")
 }
