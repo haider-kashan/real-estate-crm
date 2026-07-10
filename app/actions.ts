@@ -100,6 +100,11 @@ export async function getLead(id: number) {
 
     const lead = await prisma.lead.findUnique({
       where: { id },
+      include: {
+        logs: {
+          orderBy: { date: 'desc' }
+        }
+      }
     });
 
     if (lead?.userId !== userId) return null;

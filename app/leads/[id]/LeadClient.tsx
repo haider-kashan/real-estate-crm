@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getLeadHealth } from '../../lib/utils';
 import { deleteLead, updateLead, trackEvent } from '../../actions'; 
-
+import { updateLeadStickyNote, addLeadActivityLog } from '../../lib/lead-actions';
 // Component Imports
 import ShareLeadModal from '../../components/leads/ShareLeadModal';
 import EditLeadModal from '../../components/leads/EditLeadModal';
@@ -22,6 +22,7 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
       ...dbLead,
       dateAdded: dbLead.createdAt, 
       lastContactDate: dbLead.lastContacted,
+      logs: dbLead.logs || [],
       features: {
         hasBasement: dbLead.hasBasement,
         isCorner: dbLead.isCorner,
@@ -37,6 +38,15 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
   const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
   
+  // Sticky Note State
+  const [stickyNote, setStickyNote] = useState(lead?.notes || '');
+  const [isSavingNote, setIsSavingNote] = useState(false);
+
+  // Activity Log State
+  const [newLogContent, setNewLogContent] = useState('');
+  const [newLogType, setNewLogType] = useState<'call' | 'whatsapp' | 'meeting' | 'system'>('call');
+  const [isAddingLog, setIsAddingLog] = useState(false);
+
   // Dropdown States
   const [isDocMenuOpen, setIsDocMenuOpen] = useState(false);
   const [documentType, setDocumentType] = useState<'invoice' | 'receipt'>('invoice');
@@ -64,7 +74,7 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
   };
 
   const handleUpdateLead = async (updatedData: any) => {
-    setLead(updatedData); 
+    setLead({ ...lead, ...updatedData }); 
     const payload = {
       ...updatedData,
       hasBasement: updatedData.features?.hasBasement,
@@ -89,18 +99,68 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
     const now = new Date();
     setLead((prev: any) => ({ ...prev, lastContactDate: now }));
     await updateLead(lead.id, { lastContacted: now });
-    trackEvent('mark_contacted'); // <-- TRACKER
+    trackEvent('mark_contacted');
   };
 
   const handleSetReminder = async (isoDate: string) => {
     setLead((prev: any) => prev ? ({ ...prev, followUp: isoDate }) : prev);
     await updateLead(lead.id, { followUp: isoDate });
-    trackEvent('set_reminder'); // <-- TRACKER
+    trackEvent('set_reminder');
   };
 
   const handleRemoveReminder = async () => {
     setLead((prev: any) => prev ? ({ ...prev, followUp: null }) : prev);
     await updateLead(lead.id, { followUp: null });
+  };
+
+  // --- NEW HANDLERS FOR NOTES AND LOGS ---
+  const handleSaveStickyNote = async () => {
+    setIsSavingNote(true);
+    const result = await updateLeadStickyNote(lead.id, stickyNote);
+    if (result.success) {
+      setLead((prev: any) => ({ ...prev, notes: stickyNote }));
+    } else {
+      alert("Failed to save note.");
+    }
+    setIsSavingNote(false);
+  };
+
+  const handleAddLog = async () => {
+    if (!newLogContent.trim()) return;
+    setIsAddingLog(true);
+    
+    // We pass lead.userId so the server knows which agent created this log
+    const result = await addLeadActivityLog(lead.id, lead.userId, newLogType, newLogContent);
+    
+    if (result.success) {
+      // Optimistically update the UI so they don't have to refresh
+      const newLog = {
+        id: Date.now(), // temporary ID
+        type: newLogType,
+        content: newLogContent,
+        date: new Date().toISOString()
+      };
+      
+      setLead((prev: any) => ({ 
+        ...prev, 
+        logs: [newLog, ...(prev.logs || [])],
+        lastContactDate: new Date() 
+      }));
+      setNewLogContent(''); // Clear the input
+    } else {
+      alert("Failed to add activity log.");
+    }
+    setIsAddingLog(false);
+  };
+
+  const getLogIcon = (type: string) => {
+    switch (type) {
+      case 'call': return '📞';
+      case 'whatsapp': return '💬';
+      case 'meeting': return '🤝';
+      case 'system': return '🤖';
+      default: return '📝';
+    }
   };
 
   const isSales = ['buyer', 'seller'].includes(lead.type);
@@ -146,6 +206,8 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
 
       {/* MAIN CONTENT */}
       <div className="p-4 space-y-4">
+        
+        {/* HEALTH CARD */}
         {!['dead', 'closed'].includes(lead.status) && (
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
              <div className="flex justify-between items-center mb-2">
@@ -164,6 +226,7 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
           </div>
         )}
 
+        {/* FOLLOW UP CARD */}
         {lead.followUp && (
            <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-amber-500 shadow-sm text-lg">⏰</div>
@@ -174,6 +237,7 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
            </div>
         )}
 
+        {/* BUDGET & LOCATION */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
            <div className="p-5 border-b border-gray-50">
              <p className="text-xs text-gray-400 font-bold uppercase mb-1">{['buyer', 'tenant'].includes(lead.type) ? 'Budget Range' : 'Demand Price'}</p>
@@ -196,6 +260,7 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
            </div>
         </div>
 
+        {/* SPECIFICATIONS */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
            <h3 className="text-sm font-bold text-gray-900 uppercase mb-4 border-b border-gray-50 pb-2">Specifications</h3>
            <div className="grid grid-cols-3 gap-4">
@@ -227,24 +292,88 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
            )}
         </div>
 
+        {/* --- 1. THE STICKY NOTE (Editable) --- */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-           <h3 className="text-sm font-bold text-gray-900 uppercase mb-3">Notes</h3>
-           <div className="bg-yellow-50/50 p-4 rounded-xl border border-yellow-100 min-h-[80px]">
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{lead.notes || "No notes added."}</p>
+           <h3 className="text-sm font-bold text-gray-900 uppercase mb-3">Sticky Notes</h3>
+           <div className="relative">
+             <textarea 
+               value={stickyNote}
+               onChange={(e) => setStickyNote(e.target.value)}
+               placeholder="Add general remarks here (e.g., Wife's name, prefers calls after 5pm...)"
+               className="w-full bg-yellow-50 p-4 rounded-xl border border-yellow-200 min-h-[100px] text-sm text-gray-700 outline-none focus:ring-2 focus:ring-yellow-400 transition-all resize-none"
+             />
+             {stickyNote !== (lead.notes || '') && (
+               <button 
+                 onClick={handleSaveStickyNote}
+                 disabled={isSavingNote}
+                 className="absolute bottom-3 right-3 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition-all disabled:opacity-50"
+               >
+                 {isSavingNote ? 'Saving...' : 'Save Note'}
+               </button>
+             )}
            </div>
+        </div>
+
+        {/* --- 2. ACTIVITY TIMELINE FEED --- */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+           <h3 className="text-sm font-bold text-gray-900 uppercase mb-4">Activity Timeline</h3>
            
-           <div className="mt-4 pt-4 border-t border-gray-50 flex flex-col gap-2">
-              <div className="flex justify-between text-xs text-gray-400">
-                 <span>Added on</span>
-                 <span className="font-medium text-gray-600">{new Date(lead.dateAdded).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between text-xs text-gray-400">
-                 <span>Last Updated</span>
-                 <span className="font-medium text-gray-600">{lead.lastContactDate ? new Date(lead.lastContactDate).toLocaleDateString() : 'Never'}</span>
-              </div>
+           {/* Add New Log Form */}
+           <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mb-6">
+             <div className="flex gap-2 mb-3">
+               <select 
+                 value={newLogType} 
+                 onChange={(e) => setNewLogType(e.target.value as any)}
+                 className="bg-white border border-gray-200 text-xs font-bold text-gray-700 rounded-lg px-2 py-1.5 outline-none"
+               >
+                 <option value="call">📞 Call</option>
+                 <option value="whatsapp">💬 WhatsApp</option>
+                 <option value="meeting">🤝 Meeting</option>
+                 <option value="system">📝 General</option>
+               </select>
+             </div>
+             <textarea 
+                value={newLogContent}
+                onChange={(e) => setNewLogContent(e.target.value)}
+                placeholder="Log a recent finding..."
+                className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-black transition-colors resize-none h-20 mb-2"
+             />
+             <div className="flex justify-end">
+               <button 
+                 onClick={handleAddLog}
+                 disabled={isAddingLog || !newLogContent.trim()}
+                 className="bg-black text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+               >
+                 {isAddingLog ? 'Adding...' : 'Add to Timeline'}
+               </button>
+             </div>
+           </div>
+
+           {/* The Feed */}
+           <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:ml-[1.1rem] md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
+             {lead.logs && lead.logs.length > 0 ? (
+               lead.logs.map((log: any) => (
+                 <div key={log.id} className="relative flex items-start gap-4">
+                   <div className="absolute left-0 w-10 h-10 bg-white border-2 border-gray-100 rounded-full flex items-center justify-center text-lg z-10 shadow-sm">
+                     {getLogIcon(log.type)}
+                   </div>
+                   <div className="pl-14 pt-1 flex-1">
+                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                       {new Date(log.date).toLocaleDateString()} at {new Date(log.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                     </p>
+                     <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm text-gray-700">
+                       {log.content}
+                     </div>
+                   </div>
+                 </div>
+               ))
+             ) : (
+               <p className="text-center text-sm text-gray-400 font-medium py-4">No activity logged yet.</p>
+             )}
            </div>
         </div>
         
+        {/* CONTACT INFO */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-20">
             <h3 className="text-sm font-bold text-gray-900 uppercase mb-3">Contact Info</h3>
             <div className="space-y-3">
@@ -269,12 +398,12 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
 
       </div>
 
-      {/* FIXED ACTION BAR - TRACKERS ADDED HERE */}
+      {/* FIXED ACTION BAR */}
       <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 p-4 z-40 pb-6 safe-area-pb">
         <div className="flex gap-3 max-w-lg mx-auto">
           <a 
             href={`tel:${lead.phone}`} 
-            onClick={() => trackEvent('click_call')} // <-- TRACKER
+            onClick={() => trackEvent('click_call')} 
             className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
@@ -283,7 +412,7 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
           <a 
             href={`https://wa.me/${(lead.whatsapp || lead.phone).replace(/[^0-9]/g, '')}`} 
             target="_blank" 
-            onClick={() => trackEvent('click_whatsapp')} // <-- TRACKER
+            onClick={() => trackEvent('click_whatsapp')}
             className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform"
           >
              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
