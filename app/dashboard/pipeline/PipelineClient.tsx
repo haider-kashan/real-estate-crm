@@ -80,7 +80,7 @@ export default function PipelineClient({ initialLeads }: { initialLeads: Lead[] 
         Mobile browsers handle vertical scrolling natively during drag events 
         much better than horizontal scrolling.
       */}
-      <div className="flex flex-col h-full w-full px-4 gap-6 pb-24 pt-2">
+      <div className="flex flex-col md:flex-row md:overflow-x-auto h-full w-full px-4 gap-6 pb-24 pt-2">
         
         {COLUMNS.map((col) => {
           const colLeads = leads.filter(l => l.status === col.id);
@@ -88,7 +88,7 @@ export default function PipelineClient({ initialLeads }: { initialLeads: Lead[] 
           return (
             <div 
               key={col.id} 
-              className="w-full flex flex-col bg-gray-200/50 rounded-2xl border border-gray-200 shadow-sm max-h-[400px]"
+              className="w-full md:w-80 shrink-0 flex flex-col bg-gray-200/50 rounded-2xl border border-gray-200 shadow-sm max-h-[400px] md:max-h-full md:h-[calc(100vh-140px)]"
             >
               {/* Column Header */}
               <div className="px-4 py-3 border-b border-gray-200 bg-white/50 backdrop-blur-sm rounded-t-2xl flex justify-between items-center shrink-0">
