@@ -168,5 +168,88 @@ export const demoLeads = [
     invoices: [
       { amount: 90000, status: 'pending', dueDate: new Date(Date.now() + 3 * 86400000), details: { description: 'Advance Commission Invoice' } }
     ]
+  },
+
+  // 9. BUYER - COMMERCIAL - SCHEDULED FOLLOW UP
+  {
+    leadInfo: {
+      name: 'James Wilson',
+      phone: '+1 555 9876',
+      location: 'DHA Phase 8',
+      type: 'buyer',
+      status: 'contacted',
+      propertyType: 'Commercial',
+      budget: '85000000',
+      createdAt: new Date(Date.now() - 60 * 86400000), // 2 months ago
+      lastContacted: new Date(Date.now() - 1 * 86400000),
+      followUp: new Date(Date.now() + 2 * 86400000).toISOString(), // Follow up in 2 days
+    },
+    logs: [
+      { content: 'Interested in a plaza shop.', type: 'call', date: new Date(Date.now() - 60 * 86400000) },
+      { content: 'Sent him some options. He wants to visit this week.', type: 'whatsapp', date: new Date(Date.now() - 1 * 86400000) }
+    ],
+    invoices: []
+  },
+
+  // 10. SELLER - FLAT - DEAD (Old Lead)
+  {
+    leadInfo: {
+      name: 'Sana Farooq',
+      phone: '+92 345 1112223',
+      location: 'F-10 Markaz',
+      type: 'seller',
+      status: 'dead',
+      propertyType: 'Flat',
+      demand: '25000000',
+      createdAt: new Date(Date.now() - 90 * 86400000), // 3 months ago
+      lastContacted: new Date(Date.now() - 85 * 86400000),
+    },
+    logs: [
+      { content: 'Listed a 3-bed apartment.', type: 'meeting', date: new Date(Date.now() - 90 * 86400000) },
+      { content: 'Sold it through another agency.', type: 'system', date: new Date(Date.now() - 85 * 86400000) }
+    ],
+    invoices: []
+  },
+
+  // 11. TENANT - PORTION - INTERESTED (Recent)
+  {
+    leadInfo: {
+      name: 'Ali Raza',
+      phone: '+92 312 9998887',
+      location: 'G-11/1',
+      type: 'tenant',
+      status: 'interested',
+      propertyType: 'Portion',
+      budget: '120000',
+      createdAt: new Date(Date.now() - 15 * 86400000),
+      lastContacted: new Date(Date.now() - 2 * 86400000),
+      followUp: new Date(Date.now() + 5 * 86400000).toISOString(), // Follow up in 5 days
+    },
+    logs: [
+      { content: 'Looking for an upper portion for family.', type: 'call', date: new Date(Date.now() - 15 * 86400000) },
+      { content: 'Showed him a place in G-11. He liked it.', type: 'meeting', date: new Date(Date.now() - 2 * 86400000) }
+    ],
+    invoices: []
+  },
+
+  // 12. LANDLORD - HOUSE - CLOSED (Historical Income)
+  {
+    leadInfo: {
+      name: 'Zainab Qureshi',
+      phone: '+92 333 4445556',
+      location: 'F-8/4',
+      type: 'landlord',
+      status: 'closed',
+      propertyType: 'House',
+      demand: '400000',
+      createdAt: new Date(Date.now() - 120 * 86400000), // 4 months ago
+      lastContacted: new Date(Date.now() - 110 * 86400000),
+    },
+    logs: [
+      { content: 'Rented out 5-bed house to a diplomat.', type: 'meeting', date: new Date(Date.now() - 110 * 86400000) }
+    ],
+    invoices: [
+      { amount: 200000, status: 'paid', dueDate: new Date(Date.now() - 110 * 86400000), details: { description: 'Half month commission' } }
+    ]
   }
 ];
