@@ -268,3 +268,19 @@ export async function trackEvent(eventName: string) {
     console.error('Tracking failed:', error);
   }
 }
+
+export async function updateInvoiceStatus(invoiceId: string, status: 'paid' | 'pending') {
+  try {
+    await prisma.invoice.update({
+      where: { id: invoiceId },
+      data: { status: status },
+    });
+    
+    // Refresh the page so the status badge changes color instantly
+    revalidatePath('/leads/[id]', 'page');
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to update invoice status:', error);
+    return { success: false, error: 'Could not update status' };
+  }
+}

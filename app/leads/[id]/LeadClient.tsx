@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getLeadHealth } from '../../lib/utils';
-import { deleteLead, updateLead, trackEvent } from '../../actions'; 
+import { deleteLead, updateLead, trackEvent, updateInvoiceStatus } from '../../actions'; 
 import { updateLeadStickyNote, addLeadActivityLog } from '../../lib/lead-actions';
 // Component Imports
 import ShareLeadModal from '../../components/leads/ShareLeadModal';
@@ -375,43 +375,64 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
 
         {/* --- FINANCIALS & INVOICES --- */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-           <div className="flex justify-between items-center mb-4">
-             <h3 className="text-sm font-bold text-gray-900 uppercase">Financials</h3>
-             <button onClick={() => setIsDocMenuOpen(true)} className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
-               + Create New
-             </button>
-           </div>
-           
-           <div className="space-y-3">
-             {lead.invoices && lead.invoices.length > 0 ? (
-               lead.invoices.map((invoice: any) => (
-                 <div key={invoice.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
-                   <div className="flex items-center gap-3">
-                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${invoice.status === 'paid' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
-                       {invoice.status === 'paid' ? '🧾' : '📄'}
-                     </div>
-                     <div>
-                       <p className="text-sm font-bold text-gray-900">Rs. {invoice.amount.toLocaleString()}</p>
-                       <p className="text-xs text-gray-400 font-medium">Created: {new Date(invoice.createdAt).toLocaleDateString()}</p>
-                     </div>
-                   </div>
-                   
-                   <div className="flex flex-col items-end gap-1">
-                     <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg ${invoice.status === 'paid' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
-                       {invoice.status}
-                     </span>
-                     {invoice.dueDate && invoice.status !== 'paid' && (
-                       <span className="text-[10px] text-gray-400 font-medium">
-                         Due: {new Date(invoice.dueDate).toLocaleDateString()}
-                       </span>
-                     )}
-                   </div>
-                 </div>
-               ))
-             ) : (
-               <p className="text-center text-sm text-gray-400 font-medium py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">No invoices generated yet.</p>
-             )}
-           </div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-sm font-bold text-gray-900 uppercase">Financials</h3>
+            <button onClick={() => setIsDocMenuOpen(true)} className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+              + Create New
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            {lead.invoices && lead.invoices.length > 0 ? (
+              lead.invoices.map((invoice: any) => (
+                <div key={invoice.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${invoice.status === 'paid' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                      {invoice.status === 'paid' ? '🧾' : '📄'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">Rs. {invoice.amount.toLocaleString()}</p>
+                      <p className="text-xs text-gray-400 font-medium">Created: {new Date(invoice.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-end gap-1">
+                    {/* INTERACTIVE STATUS BADGE */}
+                    <span 
+                      onClick={async () => {
+                        const newStatus = invoice.status === 'paid' ? 'pending' : 'paid';
+                        
+                        // 1. Optimistic UI update
+                        setLead((prev: any) => ({
+                          ...prev,
+                          invoices: prev.invoices.map((inv: any) => 
+                            inv.id === invoice.id ? { ...inv, status: newStatus } : inv
+                          )
+                        }));
+                        
+                        // 2. Database update
+                        await updateInvoiceStatus(invoice.id, newStatus);
+                      }}
+                      className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg cursor-pointer transition-all hover:opacity-80 active:scale-95
+                        ${invoice.status === 'paid' 
+                          ? 'bg-green-50 text-green-700 border border-green-200' 
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'}`}
+                    >
+                      {invoice.status}
+                    </span>
+                    
+                    {invoice.dueDate && invoice.status !== 'paid' && (
+                      <span className="text-[10px] text-gray-400 font-medium">
+                        Due: {new Date(invoice.dueDate).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-sm text-gray-400 font-medium py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">No invoices generated yet.</p>
+            )}
+          </div>
         </div>
         {/* ------------------------------- */}
         
