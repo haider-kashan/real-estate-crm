@@ -25,6 +25,7 @@ model User {
   invoices         Invoice[]
   leads            Lead[]
   notes            Note[]
+  analyticsEvents  AnalyticsEvent[]
   isVerified       Boolean   @default(false)
   verificationCode Int?
   codeExpiresAt    DateTime?
@@ -114,7 +115,10 @@ model AnalyticsEvent {
   id        String   @id @default(cuid())
   eventName String   // e.g., "click_call", "click_whatsapp", "generate_invoice"
   createdAt DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // --- NEW PERFORMANCE INDEX ---
   @@index([eventName])
+  @@index([userId])
 }

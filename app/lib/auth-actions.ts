@@ -360,7 +360,7 @@ export async function createDemoAccount() {
     // This entirely prevents simultaneous login race conditions
     const assignedUsers: any[] = await prisma.$queryRaw`
       UPDATE "users" 
-      SET "isAssigned" = true 
+      SET "isAssigned" = true, "createdAt" = NOW()
       WHERE id = (
         SELECT id FROM "users" 
         WHERE "isDemo" = true AND "isAssigned" = false 
@@ -381,7 +381,7 @@ export async function createDemoAccount() {
       await replenishSandboxPool(1);
       
       const fallbackUsers: any[] = await prisma.$queryRaw`
-        UPDATE "users" SET "isAssigned" = true WHERE id = (SELECT id FROM "users" WHERE "isDemo" = true AND "isAssigned" = false LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING *;
+        UPDATE "users" SET "isAssigned" = true, "createdAt" = NOW() WHERE id = (SELECT id FROM "users" WHERE "isDemo" = true AND "isAssigned" = false LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING *;
       `;
       if (!fallbackUsers[0]) throw new Error("Failed to generate fallback sandbox");
       demoEmail = fallbackUsers[0].email;
@@ -450,7 +450,8 @@ export async function replenishSandboxPool(count: number = 20) {
     for (let j = 0; j < 50; j++) {
       mockEvents.push({
         eventName: eventTypes[Math.floor(Math.random() * eventTypes.length)],
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 86400000))
+        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 86400000)),
+        userId: demoUser.id
       });
     }
     

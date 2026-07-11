@@ -259,9 +259,11 @@ export async function deleteLead(id: number) {
 // 7. TRACK ANALYTICS EVENT
 export async function trackEvent(eventName: string) {
   try {
+    const userId = await getUserId().catch(() => null); // Silently fail if not logged in
     await prisma.analyticsEvent.create({
       data: {
         eventName,
+        userId,
       },
     });
   } catch (error) {
