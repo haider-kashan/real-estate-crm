@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getLeadHealth } from '../../lib/utils';
+import { getLeadHealth, formatIndianNumber, numberToWordsIndian } from '../../lib/utils';
 import { deleteLead, updateLead, trackEvent, updateInvoiceStatus } from '../../actions'; 
 import { updateLeadStickyNote, addLeadActivityLog } from '../../lib/lead-actions';
 // Component Imports
@@ -241,7 +241,13 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
            <div className="p-5 border-b border-gray-50">
              <p className="text-xs text-gray-400 font-bold uppercase mb-1">{['buyer', 'tenant'].includes(lead.type) ? 'Budget Range' : 'Demand Price'}</p>
-             <p className={`text-3xl font-extrabold ${themeColor}`}>{lead.budget || lead.demand || 'N/A'}</p>
+             <p className={`text-3xl font-extrabold ${themeColor}`}>
+               <span className="text-lg opacity-70 mr-1">PKR</span>
+               {formatIndianNumber(lead.budget || lead.demand || '0')}
+             </p>
+             <p className="text-xs text-gray-400 font-bold uppercase mt-1 tracking-wide">
+               {numberToWordsIndian(lead.budget || lead.demand || '0')}
+             </p>
              <div className="mt-3 flex items-start gap-2">
                 <svg className="w-4 h-4 text-gray-400 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 <p className="text-sm font-medium text-gray-700 leading-snug">{lead.location}</p>
@@ -486,7 +492,7 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
 
       {/* --- BOTTOM SHEET FOR DOCUMENT TYPE --- */}
       {isDocMenuOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={() => setIsDocMenuOpen(false)}></div>
           <div className="bg-white w-full max-w-lg rounded-t-3xl p-6 pb-12 relative animate-in slide-in-from-bottom-8 duration-300">
             <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>

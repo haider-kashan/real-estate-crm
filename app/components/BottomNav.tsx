@@ -9,11 +9,10 @@ function BottomNavContent() {
   const searchParams = useSearchParams();
 
   // 1. VISIBILITY LOGIC
-  // Hide if NOT on Dashboard ('/') 
-  // OR if 'adding' mode is active (URL contains ?adding=true)
+  // Hide only if 'adding' mode is active (URL contains ?adding=true)
   const isAdding = searchParams.get('adding') === 'true';
   
-  if (pathname !== '/' || isAdding) {
+  if (isAdding) {
     return null;
   }
 
@@ -59,6 +58,26 @@ function BottomNavContent() {
         </div>
         <span className={`${labelClass} ${isActive('/rentals') ? 'text-indigo-600' : 'text-gray-400'}`}>
           Rentals
+        </span>
+      </Link>
+      
+      {/* 4. PIPELINE (KANBAN) */}
+      <Link href="/dashboard/pipeline" prefetch={true} className={navItemClass}>
+        <div className={`${iconBaseClass} ${isActive('/dashboard/pipeline') ? 'bg-orange-500 text-white shadow-md shadow-orange-100 translate-y-0' : 'bg-transparent text-gray-400 group-hover:bg-orange-50 group-active:scale-90'}`}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+        </div>
+        <span className={`${labelClass} ${isActive('/dashboard/pipeline') ? 'text-orange-500' : 'text-gray-400'}`}>
+          Pipeline
+        </span>
+      </Link>
+
+      {/* 5. FOLLOW-UPS */}
+      <Link href="/dashboard/follow-ups" prefetch={true} className={navItemClass}>
+        <div className={`${iconBaseClass} ${isActive('/dashboard/follow-ups') ? 'bg-red-500 text-white shadow-md shadow-red-100 translate-y-0' : 'bg-transparent text-gray-400 group-hover:bg-red-50 group-active:scale-90'}`}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        </div>
+        <span className={`${labelClass} ${isActive('/dashboard/follow-ups') ? 'text-red-500' : 'text-gray-400'}`}>
+          Tasks
         </span>
       </Link>
       

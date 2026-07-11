@@ -466,3 +466,7 @@ export async function replenishSandboxPool(count: number = 20) {
     });
   }
 }
+
+export async function authenticateGoogle() {
+  await signIn('google', { redirectTo: '/' });
+}

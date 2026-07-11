@@ -5,7 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import HeaderBar, { ReminderItem } from './HeaderBar';
 import AddLeadModal from './AddLead';
-import { parsePrice, getLeadHealth } from '../lib/utils';
+import { parsePrice, getLeadHealth, formatIndianNumber, numberToWordsIndian } from '../lib/utils';
 import { loadMoreLeads } from '../actions';
 
 interface LeadDashboardProps {
@@ -263,9 +263,18 @@ export default function LeadDashboard({
                  )}
 
                  <hr className="border-gray-50 ml-3 my-2.5" />
-                 <div className="flex justify-between items-center pl-3">
+                 <div className="bg-gray-50 p-2 rounded-lg">
                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{['buyer', 'tenant'].includes(lead.type) ? 'Budget Range' : 'Demand Price'}</p>
-                   <div className="flex items-center gap-1"><p className={`font-bold text-sm ${['buyer', 'seller'].includes(lead.type) ? 'text-gray-900' : 'text-gray-900'}`}>{/* @ts-ignore */}{lead.budget || lead.demand}</p></div>
+                   <div className="flex items-center gap-1">
+                     <p className={`font-bold text-sm ${['buyer', 'seller'].includes(lead.type) ? 'text-gray-900' : 'text-gray-900'}`}>
+                       {/* @ts-ignore */}
+                       {formatIndianNumber(lead.budget || lead.demand || '0')}
+                     </p>
+                   </div>
+                   <p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5 leading-none">
+                     {/* @ts-ignore */}
+                     {numberToWordsIndian(lead.budget || lead.demand || '0')}
+                   </p>
                  </div>
                </Link>
              );

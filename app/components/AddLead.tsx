@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { addLead } from '../actions'; // <--- 1. Import the Server Action
+import { formatIndianNumber, numberToWordsIndian } from '../lib/utils';
 
 interface AddLeadModalProps {
   isOpen: boolean;
@@ -50,6 +51,9 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
     notes: ''
   });
 
+  // UX State for Progressive Disclosure
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   // Reset when opening
   useEffect(() => {
     if (isOpen) {
@@ -57,6 +61,7 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
       setRole(forcedType || (department === 'rentals' ? 'tenant' : 'buyer'));
       setUseSamePhone(false);
       setLoading(false);
+      setShowAdvanced(false); // Reset to hide advanced fields on new open
       setFormData({
         name: '', status: 'new', phone: '', whatsapp: '', location: '', budget: '', demand: '',
         propertyType: 'House', size: '', bedrooms: '', bathrooms: '', floors: '',
@@ -248,233 +253,203 @@ setLoading(true);
               </button>
           </div>
 
-          {/* 1. Basic Info */}
+          {/* 1. Essential Info (Always Visible) */}
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Basic Info</h4>
+            <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Essential Info</h4>
             
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase">Full Name <span className="text-red-500">*</span></label>
-              <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
-                value={formData.name} 
-                onChange={(e) => setFormData({...formData, name: e.target.value})} 
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase">Location Preference</label>
-              <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
-                value={formData.location} 
-                onChange={(e) => setFormData({...formData, location: e.target.value})} 
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase">Status</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none bg-white" 
-                value={formData.status} 
-                onChange={(e) => setFormData({...formData, status: e.target.value})}
-              >
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="interested">Interested</option>
-                <option value="negotiation">Negotiation</option>
-                <option value="closed">Closed</option>
-                <option value="dead">Dead</option>
-              </select>
-            </div>
-          </div>
-
-          {/* 2. Contact Details */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Contact Details</h4>
-            
-            <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase">Primary Call <span className="text-red-500">*</span></label>
-              <input
-  type="text"
-  inputMode="numeric"
-  maxLength={11}
-  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
-  placeholder="03001234567"
-  value={formData.phone}
-  onChange={(e) =>
-    setFormData({
-      ...formData,
-      phone: e.target.value.replace(/\D/g, '')
-    })
-  }
-/>
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-xs font-semibold text-gray-500 uppercase">WhatsApp</label>
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input type="checkbox" className="w-3 h-3 text-blue-600 rounded" 
-                    checked={useSamePhone} 
-                    onChange={(e) => setUseSamePhone(e.target.checked)} 
-                  />
-                  <span className="text-[10px] text-gray-500 font-medium">Same as above</span>
-                </label>
-              </div>
-              <input
-  type="text"
-  inputMode="numeric"
-  maxLength={11}
-  className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none ${
-    useSamePhone ? 'bg-gray-100 text-gray-500' : ''
-  }`}
-  placeholder="03001234567"
-  value={formData.whatsapp}
-  onChange={(e) =>
-    setFormData({
-      ...formData,
-      whatsapp: e.target.value.replace(/\D/g, '')
-    })
-  }
-  disabled={useSamePhone}
-/>
-            </div>
-          </div>
-
-          {/* 3. Property Details */}
-          <div className="space-y-3">
-             <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Property Details</h4>
-             
-             <div className="grid grid-cols-2 gap-3">
-               <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase">Property Type <span className="text-red-500">*</span></label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 outline-none bg-white" 
-                      value={formData.propertyType} 
-                      onChange={(e) => setFormData({...formData, propertyType: e.target.value})}
-                  >
-                      <option value="House">House</option>
-                      <option value="Portion">Portion</option>
-                      <option value="Flat">Flat</option>
-                      <option value="Plot">Plot</option>
-                      <option value="Commercial">Commercial</option>
-                  </select>
-               </div>
-               <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase">Size</label>
-                  <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 outline-none" 
-                    placeholder="e.g. 10 Marla" 
-                    value={formData.size} 
-                    onChange={(e) => setFormData({...formData, size: e.target.value})} 
-                  />
-               </div>
-             </div>
-             
-             <div>
-  <label className="text-xs font-semibold text-gray-500 uppercase">
-    {['buyer', 'tenant'].includes(role) ? 'Max Budget' : 'Demand Price'} <span className="text-red-500">*</span>
-  </label>
-
-  <input
-    type="text"
-    inputMode="numeric"
-    pattern="[0-9]*"
-    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 font-semibold outline-none"
-    placeholder="Enter amount"
-    value={['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand}
-    onKeyDown={(e) => {
-      if (
-        !/[0-9]/.test(e.key) &&
-        ![
-          'Backspace',
-          'Delete',
-          'ArrowLeft',
-          'ArrowRight',
-          'Tab',
-          'Home',
-          'End'
-        ].includes(e.key)
-      ) {
-        e.preventDefault();
-      }
-    }}
-    onChange={(e) => {
-      const val = e.target.value.replace(/\D/g, '');
-
-      if (['buyer', 'tenant'].includes(role)) {
-        setFormData({
-          ...formData,
-          budget: val,
-          demand: ''
-        });
-      } else {
-        setFormData({
-          ...formData,
-          demand: val,
-          budget: ''
-        });
-      }
-    }}
-  />
-</div>
-
-             <div className="grid grid-cols-3 gap-3">
-                 <div>
-                 <label className="text-xs font-semibold text-gray-500 uppercase">
-    Floors
-  </label>
-                 <input
-  type="number"
-  min="0"
-  max="50"
-  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none"
-  value={formData.floors}
-  onChange={(e) =>
-    setFormData({
-      ...formData,
-      floors: e.target.value
-    })
-  }
-/>
-                 </div>
-                 <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase">Beds</label>
-                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none" 
-                      value={formData.bedrooms} onChange={(e) => setFormData({...formData, bedrooms: e.target.value})} 
-                    />
-                 </div>
-                 <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase">Baths</label>
-                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none" 
-                      value={formData.bathrooms} onChange={(e) => setFormData({...formData, bathrooms: e.target.value})} 
-                    />
-                 </div>
-             </div>
-          </div>
-
-          {/* 4. Features (Checkboxes) */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Features</h4>
+            {/* Name & Location Row */}
             <div className="grid grid-cols-2 gap-3">
-                {Object.keys(formData.features).map((key) => (
-                    <label key={key} className="flex items-center gap-2 cursor-pointer p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
-                        <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                        checked={formData.features[key as keyof typeof formData.features]}
-                        onChange={() => toggleFeature(key)}
-                        />
-                        {/* Convert camelCase to Title Case (e.g. hasBasement -> Basement) */}
-                        <span className="text-sm text-gray-700 capitalize">
-                            {key.replace('has', '').replace('is', '').replace(/([A-Z])/g, ' $1').trim()}
-                        </span>
-                    </label>
-                ))}
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase">Full Name <span className="text-red-500">*</span></label>
+                <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+                  value={formData.name} 
+                  onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase">
+                  {['buyer', 'tenant'].includes(role) ? 'Location Preference' : 'Property Location'}
+                </label>
+                <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none" 
+                  value={formData.location} 
+                  onChange={(e) => setFormData({...formData, location: e.target.value})} 
+                />
+              </div>
+            </div>
+
+            {/* Phone & Status Row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase">Primary Call <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={11}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="03001234567"
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      phone: e.target.value.replace(/\D/g, '')
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase">Status</label>
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none bg-white" 
+                  value={formData.status} 
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                >
+                  <option value="new">New</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="interested">Interested</option>
+                  <option value="negotiation">Negotiation</option>
+                  <option value="closed">Closed</option>
+                  <option value="dead">Dead</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Budget / Demand (Crucial for Sales/Rentals) */}
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">
+                {['buyer', 'tenant'].includes(role) ? 'Max Budget' : 'Demand Price'} <span className="text-red-500">*</span>
+              </label>
+
+              <input
+                type="text"
+                inputMode="numeric"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter amount"
+                value={formatIndianNumber(['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand)}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '');
+                  if (['buyer', 'tenant'].includes(role)) {
+                    setFormData({ ...formData, budget: val, demand: '' });
+                  } else {
+                    setFormData({ ...formData, demand: val, budget: '' });
+                  }
+                }}
+              />
+              <p className="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-wide">
+                {numberToWordsIndian(['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand)}
+              </p>
             </div>
           </div>
 
-          {/* 5. Notes */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-bold text-gray-900 border-b pb-1">Notes</h4>
-            <textarea className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 h-24 focus:ring-2 focus:ring-blue-500 outline-none resize-none" 
-              placeholder="Add detailed requirements..." 
-              value={formData.notes} 
-              onChange={(e) => setFormData({...formData, notes: e.target.value})}
-            ></textarea>
-          </div>
+          {/* PROGRESSIVE DISCLOSURE TOGGLE BUTTON */}
+          <button 
+            type="button" 
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="w-full py-2.5 mt-2 border border-dashed border-gray-300 rounded-lg text-sm font-semibold text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          >
+            {showAdvanced ? (
+               <>Hide Advanced Property Details <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></>
+            ) : (
+               <>Add Advanced Property Details <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></>
+            )}
+          </button>
+
+          {/* 2. Advanced Details (Hidden by Default) */}
+          {showAdvanced && (
+            <div className="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-100 animate-in slide-in-from-top-2 fade-in duration-200">
+              
+              {/* Secondary Contact */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs font-semibold text-gray-500 uppercase">WhatsApp</label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input type="checkbox" className="w-3 h-3 text-blue-600 rounded" 
+                      checked={useSamePhone} 
+                      onChange={(e) => setUseSamePhone(e.target.checked)} 
+                    />
+                    <span className="text-[10px] text-gray-500 font-medium">Same as above</span>
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={11}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none ${useSamePhone ? 'bg-gray-100 text-gray-400' : 'bg-white'}`}
+                  placeholder="03001234567"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, '') })}
+                  disabled={useSamePhone}
+                />
+              </div>
+
+              {/* Property Configuration */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                   <label className="text-xs font-semibold text-gray-500 uppercase">Property Type</label>
+                   <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 outline-none bg-white focus:ring-2 focus:ring-blue-500" 
+                       value={formData.propertyType} 
+                       onChange={(e) => setFormData({...formData, propertyType: e.target.value})}
+                   >
+                       <option value="House">House</option>
+                       <option value="Portion">Portion</option>
+                       <option value="Flat">Flat</option>
+                       <option value="Plot">Plot</option>
+                       <option value="Commercial">Commercial</option>
+                   </select>
+                </div>
+                <div>
+                   <label className="text-xs font-semibold text-gray-500 uppercase">Size</label>
+                   <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 bg-white" 
+                     placeholder="e.g. 10 Marla" 
+                     value={formData.size} 
+                     onChange={(e) => setFormData({...formData, size: e.target.value})} 
+                   />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Floors</label>
+                    <input type="number" min="0" max="50" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none bg-white focus:ring-2 focus:ring-blue-500" value={formData.floors} onChange={(e) => setFormData({...formData, floors: e.target.value})} />
+                  </div>
+                  <div>
+                     <label className="text-xs font-semibold text-gray-500 uppercase">Beds</label>
+                     <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none bg-white focus:ring-2 focus:ring-blue-500" value={formData.bedrooms} onChange={(e) => setFormData({...formData, bedrooms: e.target.value})} />
+                  </div>
+                  <div>
+                     <label className="text-xs font-semibold text-gray-500 uppercase">Baths</label>
+                     <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none bg-white focus:ring-2 focus:ring-blue-500" value={formData.bathrooms} onChange={(e) => setFormData({...formData, bathrooms: e.target.value})} />
+                  </div>
+              </div>
+
+              {/* Advanced Features */}
+              <div className="pt-2">
+                <label className="text-xs font-semibold text-gray-500 uppercase block mb-2">Advanced Features</label>
+                <div className="grid grid-cols-2 gap-2">
+                    {Object.keys(formData.features).map((key) => (
+                        <label key={key} className="flex items-center gap-2 cursor-pointer p-2 bg-white border border-gray-200 rounded-lg hover:border-blue-400 transition-colors">
+                            <input type="checkbox" className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                            checked={formData.features[key as keyof typeof formData.features]}
+                            onChange={() => toggleFeature(key)}
+                            />
+                            <span className="text-xs text-gray-700 font-medium capitalize">
+                                {key.replace('has', '').replace('is', '').replace(/([A-Z])/g, ' $1').trim()}
+                            </span>
+                        </label>
+                    ))}
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="pt-2">
+                <label className="text-xs font-semibold text-gray-500 uppercase block mb-1">Notes</label>
+                <textarea className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 h-20 focus:ring-2 focus:ring-blue-500 outline-none resize-none" 
+                  placeholder="Add detailed requirements..." 
+                  value={formData.notes} 
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                ></textarea>
+              </div>
+
+            </div>
+          )}
 
           {/* Footer Action */}
           <div className="pt-2">

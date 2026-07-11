@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 import { z } from 'zod';
 import prisma from './app/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -10,9 +11,13 @@ const LoginSchema = z.object({
   password: z.string().min(6),
 });
 
-export const { auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
     Credentials({
       async authorize(credentials) {
         // 1. Validate the input fields
@@ -91,4 +96,46 @@ export const { auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        try {
+          const email = user.email!;
+          const existingUser = await prisma.user.findUnique({ where: { email } });
+          
+          if (!existingUser) {
+            const dummyPassword = await bcrypt.hash(Math.random().toString(36).slice(-10), 10);
+            await prisma.user.create({
+              data: {
+                email: email,
+                name: user.name,
+                password: dummyPassword,
+                isVerified: true,
+                logoUrl: user.image
+              }
+            });
+          }
+          return true;
+        } catch (error) {
+          console.error('Error auto-provisioning Google user:', error);
+          return false;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      if (account?.provider === 'google' && user?.email) {
+        // Find the real user ID from our DB
+        const dbUser = await prisma.user.findUnique({ where: { email: user.email } });
+        if (dbUser) {
+          token.id = dbUser.id.toString();
+        }
+      } else if (user) {
+        // Credentials provider
+        token.id = user.id;
+      }
+      return token;
+    }
+  }
 });

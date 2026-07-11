@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { formatIndianNumber, numberToWordsIndian } from '../../lib/utils';
 
 // Use 'any' to keep it flexible as requested
 type Lead = any; 
@@ -60,7 +61,7 @@ export default function EditLeadModal({ isOpen, onClose, lead, onSave }: EditLea
     }
     // Check Budget or Demand depending on type
     const priceField = ['buyer', 'tenant'].includes(editForm.type) ? editForm.budget : editForm.demand;
-    if (!priceField?.trim()) {
+    if (!priceField?.toString().trim()) {
       alert("Please enter the Budget/Demand price.");
       return;
     }
@@ -192,37 +193,43 @@ export default function EditLeadModal({ isOpen, onClose, lead, onSave }: EditLea
                </div>
              </div>
              
-             <div>
+              <div className="md:col-span-2">
                 <label className="text-xs font-semibold text-gray-500 uppercase">
                   {['buyer', 'tenant'].includes(editForm.type) ? 'Max Budget' : 'Demand Price'} <span className="text-red-500">*</span>
                 </label>
-                <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 font-semibold outline-none" 
-                    value={editForm.budget || editForm.demand || ''} 
-                    onChange={(e) => {
-                        const val = e.target.value;
-                        if(['buyer', 'tenant'].includes(editForm.type)) setEditForm({...editForm, budget: val, demand: undefined});
-                        else setEditForm({...editForm, demand: val, budget: undefined});
-                    }} 
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formatIndianNumber(editForm.budget || editForm.demand || '')} 
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    if(['buyer', 'tenant'].includes(editForm.type)) setEditForm({...editForm, budget: val, demand: undefined});
+                    else setEditForm({...editForm, demand: val, budget: undefined});
+                  }}
                 />
-             </div>
+                <p className="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-wide">
+                  {numberToWordsIndian(editForm.budget || editForm.demand || '')}
+                </p>
+              </div>
 
              <div className="grid grid-cols-3 gap-3">
                  <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase">Floors</label>
-                    <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none" 
-                      value={editForm.floors} onChange={(e) => setEditForm({...editForm, floors: e.target.value})} 
+                    <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none" 
+                      value={editForm.floors || ''} onChange={(e) => setEditForm({...editForm, floors: e.target.value})} 
                     />
                  </div>
                  <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase">Beds</label>
                     <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none" 
-                      value={editForm.bedrooms} onChange={(e) => setEditForm({...editForm, bedrooms: e.target.value})} 
+                      value={editForm.bedrooms || ''} onChange={(e) => setEditForm({...editForm, bedrooms: e.target.value})} 
                     />
                  </div>
                  <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase">Baths</label>
                     <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 outline-none" 
-                      value={editForm.bathrooms} onChange={(e) => setEditForm({...editForm, bathrooms: e.target.value})} 
+                      value={editForm.bathrooms || ''} onChange={(e) => setEditForm({...editForm, bathrooms: e.target.value})} 
                     />
                  </div>
              </div>

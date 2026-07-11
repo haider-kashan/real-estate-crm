@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 // 1. Updated interface to match parent props exactly
 interface ReminderModalProps {
@@ -20,17 +20,19 @@ export default function ReminderModal({
   onRemove 
 }: ReminderModalProps) {
   
+  const [customDate, setCustomDate] = useState<string>('');
+
   if (!isOpen) return null;
 
-  const handleSet = (offsetDays: number | 'custom', customDate?: string) => {
+  const handleSet = (offsetDays: number | 'custom', customDateVal?: string) => {
     let date = new Date();
     
     if (typeof offsetDays === 'number') {
       date.setDate(date.getDate() + offsetDays);
       date.setHours(10, 0, 0, 0); // Default to 10 AM
-    } else if (customDate) {
-      if (!customDate) return; // Quick safeguard
-      date = new Date(customDate);
+    } else if (customDateVal) {
+      if (!customDateVal) return; // Quick safeguard
+      date = new Date(customDateVal);
     }
 
     // 3. Call the newly named prop
@@ -74,11 +76,26 @@ export default function ReminderModal({
               <span className="font-bold text-gray-900 text-sm">Next Week</span>
               <span className="text-[10px] text-gray-500 font-medium">Long term</span>
             </button>
-            <div className="flex flex-col gap-1 h-full">
-                <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Custom Date</label>
-                <input type="datetime-local" className="w-full h-full px-3 py-2 border border-gray-300 rounded-xl text-xs bg-gray-50 text-gray-900 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" 
-                  onChange={(e) => handleSet('custom', e.target.value)}
-                />
+            <div className="flex flex-col gap-1 col-span-2 mt-2">
+                <label className="text-[10px] font-bold text-gray-500 uppercase ml-1">Custom Date & Time</label>
+                <div className="flex gap-2">
+                  <input type="datetime-local" className="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-xs bg-gray-50 text-gray-900 focus:outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer" 
+                    onChange={(e) => setCustomDate(e.target.value)}
+                    onClick={(e) => {
+                      try {
+                        (e.target as HTMLInputElement).showPicker();
+                      } catch (err) {}
+                    }}
+                  />
+                  {customDate && (
+                    <button 
+                      onClick={() => handleSet('custom', customDate)}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 active:scale-95 transition-all"
+                    >
+                      Confirm
+                    </button>
+                  )}
+                </div>
             </div>
           </div>
 

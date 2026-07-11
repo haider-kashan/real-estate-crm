@@ -7,6 +7,37 @@ export const parsePrice = (priceStr: string) => {
   return parseFloat(clean.replace(/[^0-9.]/g, '')) || 0;
 };
 
+// --- NUMBER FORMATTING ---
+export const formatIndianNumber = (val: string) => {
+  // Remove everything except numbers
+  const numStr = val.replace(/[^0-9]/g, '');
+  if (!numStr) return '';
+  const num = parseInt(numStr, 10);
+  if (isNaN(num)) return '';
+  return new Intl.NumberFormat('en-IN').format(num);
+};
+
+export const numberToWordsIndian = (val: string) => {
+  const num = parseInt(val.replace(/[^0-9]/g, ''), 10);
+  if (isNaN(num) || num === 0) return '';
+
+  const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+  const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+  if ((num.toString()).length > 9) return 'Overflow';
+  const n = ('000000000' + num).slice(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+  if (!n) return '';
+
+  let str = '';
+  str += (parseInt(n[1], 10) != 0) ? (a[parseInt(n[1], 10)] || b[parseInt(n[1][0], 10)] + ' ' + a[parseInt(n[1][1], 10)]) + 'Crore ' : '';
+  str += (parseInt(n[2], 10) != 0) ? (a[parseInt(n[2], 10)] || b[parseInt(n[2][0], 10)] + ' ' + a[parseInt(n[2][1], 10)]) + 'Lakh ' : '';
+  str += (parseInt(n[3], 10) != 0) ? (a[parseInt(n[3], 10)] || b[parseInt(n[3][0], 10)] + ' ' + a[parseInt(n[3][1], 10)]) + 'Thousand ' : '';
+  str += (parseInt(n[4], 10) != 0) ? (a[parseInt(n[4], 10)] || b[parseInt(n[4][0], 10)] + ' ' + a[parseInt(n[4][1], 10)]) + 'Hundred ' : '';
+  str += (parseInt(n[5], 10) != 0) ? ((str != '') ? 'and ' : '') + (a[parseInt(n[5], 10)] || b[parseInt(n[5][0], 10)] + ' ' + a[parseInt(n[5][1], 10)]) : '';
+
+  return str.trim() + ' Only';
+};
+
 // --- FIXED HEALTH LOGIC ---
 export const getLeadHealth = (lastContactDate?: string, dateAdded?: string) => {
   // Priority: 1. Last Contact, 2. Date Added, 3. Fallback to Today (Only if NEW)

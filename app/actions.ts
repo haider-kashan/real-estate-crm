@@ -3,6 +3,7 @@
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { auth } from '../auth';
 import prisma from './lib/prisma';
+import { sendFollowupScheduledAlert } from './lib/automation';
 
 // --- HELPER: GET CURRENT USER ID ---
 async function getUserId() {
@@ -199,8 +200,20 @@ export async function updateLead(id: number, data: any) {
 
     const updatedLead = await prisma.lead.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...updateData,
+        lastContacted: new Date()
+      },
     });
+
+    // EVENT-DRIVEN AUTOMATION: Trigger an email if a new follow-up was scheduled
+    if (updateData.followUp && new Date(updateData.followUp).getTime() !== new Date(existing.followUp || 0).getTime()) {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (user?.email) {
+        // Fire asynchronously (do not await) so it doesn't block the UI
+        sendFollowupScheduledAlert(user.email, user.name || 'Agent', updatedLead).catch(console.error);
+      }
+    }
 
     revalidatePath('/');
     revalidatePath(`/leads/${id}`);
