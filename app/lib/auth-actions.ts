@@ -373,9 +373,11 @@ export async function createDemoAccount() {
     });
 
     // 3. INJECT DUMMY DATA WITH NESTED RELATIONS
+    // We use Promise.all to insert all leads concurrently.
+    // By removing 'connection_limit=1' from the .env, this will process in parallel and take < 1 second.
     await Promise.all(
-      demoLeads.map(async (dummy: any) => {
-        return prisma.lead.create({
+      demoLeads.map((dummy) =>
+        prisma.lead.create({
           data: {
             ...dummy.leadInfo,
             userId: demoUser.id,
@@ -386,11 +388,26 @@ export async function createDemoAccount() {
               create: dummy.invoices.map((invoice: any) => ({ ...invoice, userId: demoUser.id }))
             }
           }
-        });
-      })
+        })
+      )
     );
 
-    // 4. SIGN THEM IN AUTOMATICALLY
+    // 4. INJECT DEMO ANALYTICS EVENTS (Mock traffic data)
+    // Generates ~50 fake events spread across the last 30 days
+    const mockEvents = [];
+    const eventTypes = ['mark_contacted', 'set_reminder', 'click_share', 'click_call', 'click_whatsapp'];
+    for (let i = 0; i < 50; i++) {
+      mockEvents.push({
+        eventName: eventTypes[Math.floor(Math.random() * eventTypes.length)],
+        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 86400000))
+      });
+    }
+    
+    await prisma.analyticsEvent.createMany({
+      data: mockEvents
+    });
+
+    // 5. SIGN THEM IN AUTOMATICALLY
     await signIn('credentials', {
       email: demoEmail,
       password: demoPassword,
@@ -402,6 +419,6 @@ export async function createDemoAccount() {
       throw error; 
     }
     console.error('Demo Account Creation Error:', error);
-    return 'Failed to generate demo account.';
+    return 'Failed to generate demo account. Please try again.';
   }
 }
