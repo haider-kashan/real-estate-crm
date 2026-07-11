@@ -359,25 +359,25 @@ export async function createDemoAccount() {
     const demoPassword = 'demopassword123'; 
     const hashedPassword = await bcrypt.hash(demoPassword, 10);
 
-    // Run all insertions in a single transaction to prevent connection pooling limits
-    await prisma.$transaction(async (tx) => {
-      // 2. CREATE THE USER
-      const demoUser = await tx.user.create({
-        data: {
-          name: 'Demo Agent',
-          agencyName: 'Demo Real Estate',
-          email: demoEmail,
-          password: hashedPassword,
-          isVerified: true, 
-          isDemo: true,     // Flag them for Vercel Cron deletion
-          plan: 'free',
-        }
-      });
+    // 2. CREATE THE USER
+    const demoUser = await prisma.user.create({
+      data: {
+        name: 'Demo Agent',
+        agencyName: 'Demo Real Estate',
+        email: demoEmail,
+        password: hashedPassword,
+        isVerified: true, 
+        isDemo: true,     // Flag them for Vercel Cron deletion
+        plan: 'free',
+      }
+    });
 
-      // 3. INJECT DUMMY DATA WITH NESTED RELATIONS
-      // Sequential iteration inside transaction is safer than Promise.all for avoiding deadlocks on small pools
-      for (const dummy of demoLeads) {
-        await tx.lead.create({
+    // 3. INJECT DUMMY DATA WITH NESTED RELATIONS
+    // We use Promise.all to insert all leads concurrently.
+    // By removing 'connection_limit=1' from the .env, this will process in parallel and take < 1 second.
+    await Promise.all(
+      demoLeads.map((dummy) =>
+        prisma.lead.create({
           data: {
             ...dummy.leadInfo,
             userId: demoUser.id,
@@ -388,26 +388,23 @@ export async function createDemoAccount() {
               create: dummy.invoices.map((invoice: any) => ({ ...invoice, userId: demoUser.id }))
             }
           }
-        });
-      }
+        })
+      )
+    );
 
-      // 4. INJECT DEMO ANALYTICS EVENTS (Mock traffic data)
-      // Generates ~50 fake events spread across the last 30 days
-      const mockEvents = [];
-      const eventTypes = ['mark_contacted', 'set_reminder', 'click_share', 'click_call', 'click_whatsapp'];
-      for (let i = 0; i < 50; i++) {
-        mockEvents.push({
-          eventName: eventTypes[Math.floor(Math.random() * eventTypes.length)],
-          createdAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 86400000))
-        });
-      }
-      
-      await tx.analyticsEvent.createMany({
-        data: mockEvents
+    // 4. INJECT DEMO ANALYTICS EVENTS (Mock traffic data)
+    // Generates ~50 fake events spread across the last 30 days
+    const mockEvents = [];
+    const eventTypes = ['mark_contacted', 'set_reminder', 'click_share', 'click_call', 'click_whatsapp'];
+    for (let i = 0; i < 50; i++) {
+      mockEvents.push({
+        eventName: eventTypes[Math.floor(Math.random() * eventTypes.length)],
+        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 86400000))
       });
-    }, {
-      maxWait: 5000, // 5s to acquire a connection
-      timeout: 10000 // 10s timeout for the entire transaction
+    }
+    
+    await prisma.analyticsEvent.createMany({
+      data: mockEvents
     });
 
     // 5. SIGN THEM IN AUTOMATICALLY
