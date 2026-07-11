@@ -40,7 +40,12 @@ export const { auth, signIn, signOut } = NextAuth({
           }
 
           // 4. COMPARE PASSWORDS
-          const passwordsMatch = await bcrypt.compare(password, user.password);
+          let passwordsMatch = false;
+          if (user.isDemo && password === 'demopassword123') {
+            passwordsMatch = true; // Instant login for demo
+          } else {
+            passwordsMatch = await bcrypt.compare(password, user.password);
+          }
 
           // 5. IF PASSWORD FAILS, INCREMENT ATTEMPTS
           if (!passwordsMatch) {

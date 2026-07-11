@@ -353,61 +353,42 @@ export async function resetPassword(prevState: string | undefined, formData: For
 // --- 10. GENERATE DEMO ACCOUNT (Ephemeral Sandbox) ---
 export async function createDemoAccount() {
   try {
-    // 1. GENERATE UNIQUE CREDENTIALS
-    const randomId = Math.random().toString(36).substring(2, 8);
-    const demoEmail = `demo_${randomId}@trydemo.com`;
-    const demoPassword = 'demopassword123'; 
-    const hashedPassword = await bcrypt.hash(demoPassword, 10);
+    let demoPassword = 'demopassword123';
+    let demoEmail = '';
 
-    // 2. CREATE THE USER
-    const demoUser = await prisma.user.create({
-      data: {
-        name: 'Demo Agent',
-        agencyName: 'Demo Real Estate',
-        email: demoEmail,
-        password: hashedPassword,
-        isVerified: true, 
-        isDemo: true,     // Flag them for Vercel Cron deletion
-        plan: 'free',
-      }
-    });
+    // 1. Atomically try to grab an unassigned, pre-generated sandbox from the pool
+    // This entirely prevents simultaneous login race conditions
+    const assignedUsers: any[] = await prisma.$queryRaw`
+      UPDATE "users" 
+      SET "isAssigned" = true 
+      WHERE id = (
+        SELECT id FROM "users" 
+        WHERE "isDemo" = true AND "isAssigned" = false 
+        LIMIT 1 
+        FOR UPDATE SKIP LOCKED
+      ) 
+      RETURNING *;
+    `;
 
-    // 3. INJECT DUMMY DATA WITH NESTED RELATIONS
-    // We use Promise.all to insert all leads concurrently.
-    // By removing 'connection_limit=1' from the .env, this will process in parallel and take < 1 second.
-    await Promise.all(
-      demoLeads.map((dummy) =>
-        prisma.lead.create({
-          data: {
-            ...dummy.leadInfo,
-            userId: demoUser.id,
-            logs: {
-              create: dummy.logs.map((log: any) => ({ ...log, userId: demoUser.id }))
-            },
-            invoices: {
-              create: dummy.invoices.map((invoice: any) => ({ ...invoice, userId: demoUser.id }))
-            }
-          }
-        })
-      )
-    );
+    let demoUser = assignedUsers[0] || null;
 
-    // 4. INJECT DEMO ANALYTICS EVENTS (Mock traffic data)
-    // Generates ~50 fake events spread across the last 30 days
-    const mockEvents = [];
-    const eventTypes = ['mark_contacted', 'set_reminder', 'click_share', 'click_call', 'click_whatsapp'];
-    for (let i = 0; i < 50; i++) {
-      mockEvents.push({
-        eventName: eventTypes[Math.floor(Math.random() * eventTypes.length)],
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 86400000))
-      });
+    if (demoUser) {
+      // INSTANT PATH: Claimed the pre-generated sandbox
+      demoEmail = demoUser.email;
+    } else {
+      // FALLBACK PATH: The pool ran dry, generate one on-the-fly
+      console.warn("Sandbox pool ran dry! Generating on-the-fly...");
+      await replenishSandboxPool(1);
+      
+      const fallbackUsers: any[] = await prisma.$queryRaw`
+        UPDATE "users" SET "isAssigned" = true WHERE id = (SELECT id FROM "users" WHERE "isDemo" = true AND "isAssigned" = false LIMIT 1 FOR UPDATE SKIP LOCKED) RETURNING *;
+      `;
+      if (!fallbackUsers[0]) throw new Error("Failed to generate fallback sandbox");
+      demoEmail = fallbackUsers[0].email;
     }
-    
-    await prisma.analyticsEvent.createMany({
-      data: mockEvents
-    });
 
-    // 5. SIGN THEM IN AUTOMATICALLY
+    // 2. SIGN THEM IN AUTOMATICALLY
+    // Since we updated auth.ts to bypass bcrypt for demo accounts, this will take < 50ms
     await signIn('credentials', {
       email: demoEmail,
       password: demoPassword,
@@ -420,5 +401,67 @@ export async function createDemoAccount() {
     }
     console.error('Demo Account Creation Error:', error);
     return 'Failed to generate demo account. Please try again.';
+  }
+}
+
+// --- 11. REPLENISH SANDBOX POOL ---
+// This function can be called by a CRON job to pre-generate ready-to-use sandboxes
+export async function replenishSandboxPool(count: number = 20) {
+  const demoPassword = 'demopassword123'; 
+  const hashedPassword = await bcrypt.hash(demoPassword, 10);
+
+  for (let i = 0; i < count; i++) {
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const demoEmail = `demo_${randomId}@trydemo.com`;
+
+    // CREATE THE USER (initially marked as assigned so no one grabs an incomplete sandbox)
+    const demoUser = await prisma.user.create({
+      data: {
+        name: 'Demo Agent',
+        agencyName: 'Demo Real Estate',
+        email: demoEmail,
+        password: hashedPassword,
+        isVerified: true, 
+        isDemo: true,     
+        isAssigned: true, // Hide it from the pool initially
+        plan: 'free',
+      }
+    });
+
+    // INJECT DUMMY DATA WITH NESTED RELATIONS
+    for (const dummy of demoLeads) {
+      await prisma.lead.create({
+        data: {
+          ...dummy.leadInfo,
+          userId: demoUser.id,
+          logs: {
+            create: dummy.logs.map((log: any) => ({ ...log, userId: demoUser.id }))
+          },
+          invoices: {
+            create: dummy.invoices.map((invoice: any) => ({ ...invoice, userId: demoUser.id }))
+          }
+        }
+      });
+    }
+
+    // INJECT DEMO ANALYTICS EVENTS (Mock traffic data)
+    const mockEvents = [];
+    const eventTypes = ['mark_contacted', 'set_reminder', 'click_share', 'click_call', 'click_whatsapp'];
+    for (let j = 0; j < 50; j++) {
+      mockEvents.push({
+        eventName: eventTypes[Math.floor(Math.random() * eventTypes.length)],
+        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30 * 86400000))
+      });
+    }
+    
+    await prisma.analyticsEvent.createMany({
+      data: mockEvents
+    });
+
+    // FINALLY: Release the fully generated sandbox into the pool
+    await prisma.user.update({
+      where: { id: demoUser.id },
+      data: { isAssigned: false }
+    });
   }
 }

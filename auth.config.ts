@@ -26,6 +26,18 @@ export const authConfig = {
 
       return true; // Allow access to other pages (like images/static)
     },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token?.id) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
   },
   providers: [], // Keep this empty here! (Providers are in app/auth.ts)
 } satisfies NextAuthConfig;

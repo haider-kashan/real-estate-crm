@@ -8,17 +8,11 @@ import prisma from './lib/prisma';
 async function getUserId() {
   const session = await auth();
 
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     throw new Error('Unauthorized: Please login first.');
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-
-  if (!user) throw new Error('User not found.');
-
-  return user.id;
+  return session.user.id;
 }
 
 // 1. GET LEADS (First 20 - Full Data)
@@ -98,21 +92,27 @@ export async function getLead(id: number) {
   try {
     const userId = await getUserId();
 
-    const lead = await prisma.lead.findUnique({
-      where: { 
-        id: id,
-        userId: userId 
+    const getCachedLead = unstable_cache(
+      async (leadId) => {
+        return await prisma.lead.findUnique({
+          where: { 
+            id: leadId,
+          },
+          include: {
+            logs: {
+              orderBy: { date: 'desc' }
+            },
+            invoices: {
+              orderBy: { createdAt: 'desc' }
+            }
+          }
+        });
       },
-      include: {
-        logs: {
-          orderBy: { date: 'desc' } 
-        },
-        invoices: {
-          orderBy: { createdAt: 'desc' }
-        }
-        // ---------------------
-      }
-    });
+      [`lead-detail-${id}`],
+      { tags: [`lead-${id}`], revalidate: 60 }
+    );
+
+    const lead = await getCachedLead(id);
 
     if (lead?.userId !== userId) return null;
 

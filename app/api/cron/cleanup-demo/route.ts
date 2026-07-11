@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../lib/prisma';
 
+import { replenishSandboxPool } from '../../../lib/auth-actions';
+
 export async function GET(request: Request) {
   // 1. SECURITY: Verify the request is actually coming from Vercel
   const authHeader = request.headers.get('authorization');
@@ -19,7 +21,10 @@ export async function GET(request: Request) {
       }
     });
 
-    return NextResponse.json({ success: true, deletedCount: result.count });
+    // 3. THE REPLENISHMENT: Generate 20 fresh sandbox accounts for the new day
+    await replenishSandboxPool(20);
+
+    return NextResponse.json({ success: true, deletedCount: result.count, replenished: 20 });
   } catch (error) {
     console.error('Cron Job Cleanup Error:', error);
     return NextResponse.json({ success: false, error: 'Cleanup failed' }, { status: 500 });

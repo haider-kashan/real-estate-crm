@@ -3,6 +3,7 @@ import LeadDashboard from './components/LeadDashboard';
 import { ReminderItem } from './components/HeaderBar';
 import { auth } from '../auth'; 
 import prisma from '@/app/lib/prisma'; // <--- 1. Import Prisma
+import LogoutClient from './components/LogoutClient';
 
 // Helper to generate reminders
 const getReminders = (leads: any[]): ReminderItem[] => {
@@ -42,6 +43,11 @@ export default async function Home() {
         logoUrl: dbUser.logoUrl // <--- 4. Pass the real logo string
       } 
     : undefined;
+
+  // Catch "Ghost Sessions" (User exists in cookie but was deleted from database)
+  if (session?.user && !dbUser) {
+    return <LogoutClient />;
+  }
 
   // 5. Fetch REAL leads data
   const leads = await getLeads(); 

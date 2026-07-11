@@ -219,9 +219,10 @@ export default function LeadDashboard({
              const isInactive = ['dead', 'closed'].includes(lead.status);
 
              return (
-               // --- REMOVED PREFETCH PROP ENTIRELY TO ENABLE INTENT-BASED HOVER ---
+               // --- ADDED PREFETCH BACK TO INSTANTLY LOAD LEAD PAGES ---
                <Link 
                  href={`/leads/${lead.id}`} 
+                 prefetch={true}
                  key={lead.id} 
                  className="block bg-white p-3.5 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 relative overflow-hidden active:scale-[0.98] transition-transform cursor-pointer"
                >
