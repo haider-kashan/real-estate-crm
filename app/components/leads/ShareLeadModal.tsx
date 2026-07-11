@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { findLeadMatches } from '../../lib/utils';
 
 type Lead = any; // Replace with your actual interface
 
@@ -18,20 +19,14 @@ export default function ShareLeadModal({ isOpen, onClose, lead, allLeads }: Shar
   const matchingLeads = useMemo(() => {
     if (!lead) return [];
     
-    let targetType = '';
-    if (lead.type === 'tenant') targetType = 'landlord';
-    else if (lead.type === 'landlord') targetType = 'tenant';
-    else if (lead.type === 'buyer') targetType = 'seller';
-    else if (lead.type === 'seller') targetType = 'buyer';
-
-    let targets = allLeads.filter((l: Lead) => l.type === targetType);
+    let matches = findLeadMatches(lead, allLeads);
 
     if (shareSearch) {
       const q = shareSearch.toLowerCase();
-      targets = targets.filter((t: Lead) => t.name.toLowerCase().includes(q) || t.phone.includes(q));
+      matches = matches.filter((m: any) => m.match.name.toLowerCase().includes(q) || m.match.phone.includes(q));
     }
 
-    return targets;
+    return matches;
   }, [lead, allLeads, shareSearch]);
 
   const getTargetLabel = () => {
@@ -124,11 +119,14 @@ _Let me know if this matches your requirement._`;
           {matchingLeads.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center opacity-50"><p className="text-sm font-bold text-gray-400">No matching {getTargetLabel().toLowerCase()} found.</p></div>
           ) : (
-            matchingLeads.map((target) => (
+            matchingLeads.map(({ match: target, reason }) => (
               <button key={target.id} onClick={() => shareToLead(target.whatsapp || target.phone)} className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-xl hover:border-green-500 hover:shadow-md transition-all active:scale-[0.98] text-left group">
                 <div>
                   <div className="flex items-center gap-2"><h4 className="font-bold text-gray-900 text-sm">{target.name}</h4><span className={`text-[9px] px-1.5 py-0.5 rounded border uppercase font-bold ${['buyer','seller'].includes(target.type) ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'}`}>{target.type}</span></div>
-                  <p className="text-xs text-gray-500 mt-0.5">{target.location}</p>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-bold border border-amber-100">{reason}</span>
+                    <span className="text-[10px] text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">{target.location}</span>
+                  </div>
                 </div>
                 <div className="w-9 h-9 rounded-full bg-green-50 text-green-600 border border-green-100 flex items-center justify-center group-hover:bg-green-500 group-hover:text-white transition-colors shadow-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>

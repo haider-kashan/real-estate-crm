@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getLeadHealth, formatIndianNumber, numberToWordsIndian } from '../../lib/utils';
+import { getLeadHealth, formatIndianNumber, numberToWordsIndian, findLeadMatches } from '../../lib/utils';
 import { deleteLead, updateLead, trackEvent, updateInvoiceStatus } from '../../actions'; 
 import { updateLeadStickyNote, addLeadActivityLog } from '../../lib/lead-actions';
 // Component Imports
@@ -12,7 +12,7 @@ import EditLeadModal from '../../components/leads/EditLeadModal';
 import ReminderModal from '../../components/leads/ReminderModal';
 import InvoiceModal from '../../components/leads/InvoiceModal';
 
-export default function LeadClient({ dbLead }: { dbLead: any }) {
+export default function LeadClient({ dbLead, allLeads = [] }: { dbLead: any, allLeads?: any[] }) {
   const router = useRouter();
 
   // --- STATES ---
@@ -166,6 +166,8 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
   const isSales = ['buyer', 'seller'].includes(lead.type);
   const themeBg = isSales ? 'bg-blue-600' : 'bg-indigo-600';
   const themeColor = isSales ? 'text-blue-600' : 'text-indigo-600';
+
+  const matches = findLeadMatches(lead, allLeads);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-40 relative">
@@ -441,6 +443,36 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
           </div>
         </div>
         {/* ------------------------------- */}
+
+        {/* --- SMART MATCHES --- */}
+        {matches.length > 0 && (
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-2xl shadow-sm border border-amber-100 mb-5 relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 text-6xl opacity-10">✨</div>
+            <h3 className="text-sm font-bold text-amber-900 uppercase mb-3 flex items-center gap-2">
+              <span>Smart Matches</span>
+              <span className="bg-amber-200 text-amber-800 text-[10px] px-2 py-0.5 rounded-full">{matches.length}</span>
+            </h3>
+            <div className="space-y-3 relative z-10">
+              {matches.map(({ match, reason }) => (
+                <Link href={`/leads/${match.id}`} key={match.id} className="block bg-white p-3 border border-amber-200 rounded-xl hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-1">
+                    <div>
+                      <h4 className="font-bold text-gray-900 text-sm">{match.name}</h4>
+                      <p className="text-xs font-bold text-amber-600 uppercase mt-0.5">{match.type}</p>
+                    </div>
+                    <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded">
+                      {reason}
+                    </span>
+                  </div>
+                  <div className="flex gap-2 text-xs text-gray-500 font-medium mt-2">
+                    <span className="bg-gray-50 px-2 py-1 rounded border border-gray-100">{match.location}</span>
+                    <span className="bg-gray-50 px-2 py-1 rounded border border-gray-100">{formatIndianNumber(match.budget || match.demand || '0')}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
         
         {/* CONTACT INFO */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-20">
@@ -526,7 +558,7 @@ export default function LeadClient({ dbLead }: { dbLead: any }) {
       )}
 
       {/* --- MODALS --- */}
-      <ShareLeadModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} lead={lead} allLeads={[]} />
+      <ShareLeadModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} lead={lead} allLeads={allLeads} />
       <EditLeadModal isOpen={isEditing} onClose={() => setIsEditing(false)} lead={lead} onSave={handleUpdateLead} />
       <ReminderModal isOpen={isReminderOpen} onClose={() => setIsReminderOpen(false)} currentFollowUp={lead.followUp} onSet={handleSetReminder} onRemove={handleRemoveReminder} />
       <InvoiceModal isOpen={isInvoiceOpen} onClose={() => setIsInvoiceOpen(false)} lead={lead} type={documentType} />

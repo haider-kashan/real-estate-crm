@@ -28,11 +28,11 @@ export default async function Home() {
   // 2. Fetch User Session
   const session = await auth();
   
-  // 3. Fetch Full User Data from DB (to get the Logo)
+  // 3. Fetch Full User Data from DB (to get the Logo and Demo Status)
   const dbUser = session?.user?.email 
     ? await prisma.user.findUnique({ 
         where: { email: session.user.email },
-        select: { name: true, email: true, logoUrl: true } // Only fetch what we need
+        select: { name: true, email: true, logoUrl: true, isDemo: true } // Only fetch what we need
       }) 
     : null;
 
@@ -40,7 +40,8 @@ export default async function Home() {
     ? { 
         name: dbUser.name || 'User', 
         email: dbUser.email || '', 
-        logoUrl: dbUser.logoUrl // <--- 4. Pass the real logo string
+        logoUrl: dbUser.logoUrl, // <--- 4. Pass the real logo string
+        isDemo: dbUser.isDemo
       } 
     : undefined;
 

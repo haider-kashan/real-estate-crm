@@ -5,7 +5,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import HeaderBar, { ReminderItem } from './HeaderBar';
 import AddLeadModal from './AddLead';
-import { parsePrice, getLeadHealth, formatIndianNumber, numberToWordsIndian } from '../lib/utils';
+import { parsePrice, getLeadHealth, formatIndianNumber, numberToWordsIndian, findLeadMatches } from '../lib/utils';
 import { loadMoreLeads } from '../actions';
 
 interface LeadDashboardProps {
@@ -14,7 +14,7 @@ interface LeadDashboardProps {
   department: 'sales' | 'rentals' | 'all';
   tabs?: { id: string; label: string }[];
   reminders?: ReminderItem[];
-  user?: { name: string; email: string; logoUrl?: string | null}; // <--- 1. Added User Prop
+  user?: { name: string; email: string; logoUrl?: string | null; isDemo?: boolean }; // <--- 1. Added User Prop
 }
 
 export default function LeadDashboard({ 
@@ -33,6 +33,7 @@ export default function LeadDashboard({
   const [activeStatus, setActiveStatus] = useState('all');
   const [filters, setFilters] = useState({ location: '', minPrice: '', maxPrice: '', propertyType: '' });
   const [sortBy, setSortBy] = useState('newest');
+  const [showDemoBanner, setShowDemoBanner] = useState(true);
 
   const handleLoadMore = async () => {
     setIsLoadingMore(true);
@@ -202,13 +203,78 @@ export default function LeadDashboard({
 
       <AddLeadModal isOpen={isModalOpen} onClose={() => router.back()} department={department} />
 
+      {/* --- EVALUATOR ONBOARDING BANNER --- */}
+      {user?.isDemo && showDemoBanner && (
+        <div className="mx-3 mt-4 p-4 bg-gradient-to-br from-gray-900 to-black rounded-2xl shadow-lg relative overflow-hidden">
+           <div className="absolute -right-4 -top-4 text-6xl opacity-10">✨</div>
+           <button onClick={() => setShowDemoBanner(false)} className="absolute top-3 right-3 text-gray-400 hover:text-white bg-white/10 p-1.5 rounded-full backdrop-blur-md">
+             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+           </button>
+           <h3 className="text-white font-black mb-1">Evaluator Guide</h3>
+           <p className="text-gray-300 text-xs mb-3">Welcome to the Sandbox! Here's what to test:</p>
+           <ul className="space-y-2 text-xs font-medium">
+             <li className="flex items-start gap-2">
+               <span className="bg-amber-500/20 text-amber-400 p-1 rounded">1</span>
+               <span className="text-gray-200 mt-0.5">Open the <span className="text-amber-400 font-bold">✨ Matches Hub</span> (bottom nav) to see the Smart Engine automatically pair overlapping deals.</span>
+             </li>
+             <li className="flex items-start gap-2">
+               <span className="bg-blue-500/20 text-blue-400 p-1 rounded">2</span>
+               <span className="text-gray-200 mt-0.5">Switch to the <span className="text-white font-bold">Pipeline</span> tab below to test the Drag & Drop Kanban board.</span>
+             </li>
+             <li className="flex items-start gap-2">
+               <span className="bg-green-500/20 text-green-400 p-1 rounded">3</span>
+               <span className="text-gray-200 mt-0.5">Edit a lead, set a future follow-up date, and watch it appear in <span className="text-white font-bold">Tasks</span>.</span>
+             </li>
+           </ul>
+        </div>
+      )}
+
       <div className="p-3 space-y-3 flex-1 pb-32">
         {/* --- MAIN LIST --- */}
         {filteredLeads.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
-            <div className="bg-gray-200 p-4 rounded-full mb-3"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
-            <p className="text-sm font-bold text-gray-900">No leads found</p>
-            <p className="text-xs text-gray-500">Tap + to add lead</p>
+          <div className="flex flex-col items-center justify-center pt-8 pb-12 px-6 mt-4 text-center bg-white rounded-3xl border border-dashed border-gray-300 shadow-sm">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-white">
+              <span className="text-3xl">🚀</span>
+            </div>
+            <h3 className="text-xl font-black text-gray-900 mb-2">Welcome to your Pipeline</h3>
+            <p className="text-sm text-gray-500 mb-8 max-w-[250px]">Here is how to close your first deal in 3 simple steps:</p>
+            
+            <div className="space-y-4 w-full max-w-[280px] text-left">
+              <div className="flex gap-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">1</div>
+                  <div className="w-0.5 h-full bg-gray-100 my-1"></div>
+                </div>
+                <div className="pb-4">
+                  <p className="font-bold text-sm text-gray-900">Add a Lead</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Tap the + button to add your first buyer, seller, tenant or landlord.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 font-bold text-xs flex items-center justify-center">2</div>
+                  <div className="w-0.5 h-full bg-gray-100 my-1"></div>
+                </div>
+                <div className="pb-4">
+                  <p className="font-bold text-sm text-gray-900">Get AI Matches</p>
+                  <p className="text-xs text-gray-500 mt-0.5">The Smart Engine will instantly find overlapping deals in your database.</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex flex-col items-center">
+                  <div className="w-6 h-6 rounded-full bg-green-100 text-green-700 font-bold text-xs flex items-center justify-center">3</div>
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-gray-900">Close the Deal</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Drag them across the Kanban pipeline and get paid.</p>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => router.push(pathname + '?adding=true')} className="mt-8 w-full py-3.5 bg-gray-900 text-white rounded-xl font-bold shadow-md hover:bg-black transition-all active:scale-95 flex justify-center items-center gap-2">
+               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+               Add First Lead
+            </button>
           </div>
         ) : (
           filteredLeads.map((lead) => {
@@ -217,6 +283,9 @@ export default function LeadDashboard({
              
              // --- LOGIC: Hide Health Dot for Dead/Closed leads ---
              const isInactive = ['dead', 'closed'].includes(lead.status);
+
+             // --- SMART MATCH ENGINE ---
+             const matches = findLeadMatches(lead, initialData);
 
              return (
                // --- ADDED PREFETCH BACK TO INSTANTLY LOAD LEAD PAGES ---
@@ -251,7 +320,14 @@ export default function LeadDashboard({
                         <span>{lead.propertyType}</span>
                      </div>
                    </div>
-                   <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${lead.status === 'new' ? 'bg-green-100 text-green-700' : lead.status === 'dead' ? 'bg-red-50 text-red-600' : lead.status === 'closed' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600'}`}>{lead.status}</span>
+                   <div className="flex flex-col items-end gap-1.5">
+                     <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${lead.status === 'new' ? 'bg-green-100 text-green-700' : lead.status === 'dead' ? 'bg-red-50 text-red-600' : lead.status === 'closed' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600'}`}>{lead.status}</span>
+                     {matches.length > 0 && !isInactive && (
+                       <span className="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100 shadow-sm animate-[pulse_3s_ease-in-out_infinite]">
+                         ✨ {matches.length} Match{matches.length > 1 ? 'es' : ''}
+                       </span>
+                     )}
+                   </div>
                  </div>
                  
                  {/* Reminder Indicator */}

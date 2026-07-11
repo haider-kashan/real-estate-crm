@@ -195,6 +195,9 @@ export async function updateLead(id: number, data: any) {
       features,
       dateAdded,
       lastContactDate,
+      logs,
+      invoices,
+      user,
       ...updateData
     } = data;
 

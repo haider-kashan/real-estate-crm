@@ -1,5 +1,5 @@
 // app/leads/[id]/page.tsx
-import { getLead } from '../../actions';
+import { getLead, getLeads } from '../../actions';
 import LeadClient from './LeadClient';
 
 export default async function LeadDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -7,7 +7,8 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
   
   // The server fetches the data instantly before the user even sees the screen
   const dbLead = await getLead(parseInt(id));
+  const allLeads = await getLeads();
 
   // Pass the data to your existing UI
-  return <LeadClient dbLead={dbLead} />;
+  return <LeadClient dbLead={dbLead} allLeads={allLeads} />;
 }

@@ -3,6 +3,7 @@
 import React, { useTransition } from 'react';
 import { updateLead } from '@/app/actions';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function FollowUpsClient({ leads }: { leads: any[] }) {
   const router = useRouter();
@@ -46,26 +47,29 @@ export default function FollowUpsClient({ leads }: { leads: any[] }) {
             <div className={`absolute top-0 left-0 w-1.5 h-full ${isOverdue ? 'bg-red-500' : 'bg-blue-500'}`} />
             
             <div className="pl-2">
-                <div className="flex justify-between items-start mb-2">
-                    <div>
-                        <h4 className="font-bold text-gray-900 text-lg">{lead.name}</h4>
-                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{lead.type} • {lead.status}</span>
-                    </div>
-                    <div className="text-right flex flex-col items-end gap-1">
-                        {isOverdue ? (
-                            <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Overdue</span>
-                        ) : (
-                            <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Upcoming</span>
-                        )}
-                        <span className="text-[11px] font-extrabold text-gray-500">
-                           {new Date(lead.followUp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
-                    </div>
-                </div>
-                
-                <p className="text-sm text-gray-600 font-medium mb-4">
-                    {lead.location || "No location"} • PKR {lead.budget || lead.demand || "0"}
-                </p>
+                {/* Make the lead info area clickable */}
+                <Link href={`/leads/${lead.id}`} className="block group cursor-pointer">
+                  <div className="flex justify-between items-start mb-2">
+                      <div>
+                          <h4 className="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">{lead.name}</h4>
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{lead.type} • {lead.status}</span>
+                      </div>
+                      <div className="text-right flex flex-col items-end gap-1">
+                          {isOverdue ? (
+                              <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Overdue</span>
+                          ) : (
+                              <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Upcoming</span>
+                          )}
+                          <span className="text-[11px] font-extrabold text-gray-500">
+                             {new Date(lead.followUp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                      </div>
+                  </div>
+                  
+                  <p className="text-sm text-gray-600 font-medium mb-4 group-hover:text-gray-900 transition-colors">
+                      {lead.location || "No location"} • PKR {lead.budget || lead.demand || "0"}
+                  </p>
+                </Link>
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 mb-4">
@@ -87,19 +91,25 @@ export default function FollowUpsClient({ leads }: { leads: any[] }) {
                         Mark Done
                     </button>
                     <div className="flex-1 relative">
+                        <button 
+                           onClick={(e) => {
+                             const input = e.currentTarget.nextElementSibling as HTMLInputElement;
+                             if (input && typeof input.showPicker === 'function') {
+                               input.showPicker();
+                             }
+                           }}
+                           className="w-full py-1.5 text-xs font-bold text-blue-600 border border-blue-100 bg-blue-50 hover:bg-blue-100 rounded-lg active:scale-95 transition-all"
+                        >
+                            📅 Schedule
+                        </button>
                         <input 
                            type="date" 
                            disabled={isPending}
-                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                           className="absolute bottom-0 left-1/2 w-0 h-0 opacity-0 pointer-events-none"
                            onChange={(e) => {
                              if (e.target.value) handleReschedule(lead.id, e.target.value);
                            }}
                         />
-                        <button 
-                           className="w-full py-1.5 text-xs font-bold text-blue-600 border border-blue-100 bg-blue-50/50 rounded-lg active:scale-95 transition-all pointer-events-none"
-                        >
-                            📅 Schedule
-                        </button>
                     </div>
                 </div>
             </div>

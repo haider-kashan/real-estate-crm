@@ -71,3 +71,79 @@ export const getLeadHealth = (lastContactDate?: string, dateAdded?: string) => {
     return { status: 'Critical', color: 'bg-red-600', text: 'text-red-600', bgText: 'bg-red-50', score: 5, days: diffDays };
   }
 };
+
+// --- SMART MATCH ENGINE ---
+export const findLeadMatches = (lead: any, allLeads: any[]) => {
+  if (!lead || !allLeads || allLeads.length === 0) return [];
+
+  // Determine Target Type
+  let targetType = '';
+  if (lead.type === 'tenant') targetType = 'landlord';
+  else if (lead.type === 'landlord') targetType = 'tenant';
+  else if (lead.type === 'buyer') targetType = 'seller';
+  else if (lead.type === 'seller') targetType = 'buyer';
+
+  if (!targetType) return [];
+
+  const sourcePrice = parsePrice(lead.budget || lead.demand || '0');
+  const sourceLocation = lead.location?.toLowerCase().trim() || '';
+  const sourcePropType = lead.propertyType?.toLowerCase().trim() || '';
+
+  const matches: { match: any; reason: string }[] = [];
+
+  allLeads.forEach(target => {
+    if (target.id === lead.id) return;
+    if (target.type !== targetType) return;
+    // Don't match closed or dead leads
+    if (['dead', 'closed'].includes(target.status)) return;
+
+    const targetPrice = parsePrice(target.budget || target.demand || '0');
+    const targetLocation = target.location?.toLowerCase().trim() || '';
+    const targetPropType = target.propertyType?.toLowerCase().trim() || '';
+
+    let reasons = [];
+
+    // Location Check (fuzzy overlap)
+    let locationMatch = false;
+    if (sourceLocation && targetLocation) {
+       if (sourceLocation.includes(targetLocation) || targetLocation.includes(sourceLocation)) {
+           locationMatch = true;
+           reasons.push("Location");
+       }
+    }
+
+    // Property Type Check
+    let propTypeMatch = false;
+    if (sourcePropType && targetPropType) {
+        if (sourcePropType === targetPropType) {
+            propTypeMatch = true;
+            reasons.push("Property Type");
+        }
+    }
+
+    // Price Check (+/- 15% Negotiation Margin)
+    let priceMatch = false;
+    if (sourcePrice > 0 && targetPrice > 0) {
+       const lowerBound = sourcePrice * 0.85;
+       const upperBound = sourcePrice * 1.15;
+       if (targetPrice >= lowerBound && targetPrice <= upperBound) {
+           priceMatch = true;
+           reasons.push("Price (15% margin)");
+       }
+    }
+
+    // Determine if it's a solid match
+    if (locationMatch || propTypeMatch || priceMatch) {
+       // Must match at least two criteria, OR match Location explicitly
+       if ((locationMatch && priceMatch) || (locationMatch && propTypeMatch) || (propTypeMatch && priceMatch) || locationMatch) {
+         matches.push({
+            match: target,
+            reason: reasons.join(" + ") || "Similar Area"
+         });
+       }
+    }
+  });
+
+  // Sort by best matches first (most reasons)
+  return matches.sort((a, b) => b.reason.length - a.reason.length);
+};

@@ -106,17 +106,17 @@ export const demoLeads = [
     invoices: []
   },
 
-  // 6. SELLER - HOUSE - DEAD (Lost Deal)
+  // 6. SELLER - HOUSE - NEW (Explicitly matches Buyer #1 for Demo)
   {
     leadInfo: {
       name: 'Fatima Ali',
       phone: '+92 333 9988776',
-      location: 'E-7',
+      location: 'DHA Phase 6',
       type: 'seller',
-      status: 'dead',
+      status: 'new',
       propertyType: 'House',
-      demand: '150000000',
-      bedrooms: '6',
+      demand: '48000000', // Within 15% margin of 45M
+      bedrooms: '5',
       hasServantQuarter: true,
       isCorner: true,
     },
