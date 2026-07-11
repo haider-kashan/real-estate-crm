@@ -99,11 +99,18 @@ export async function getLead(id: number) {
     const userId = await getUserId();
 
     const lead = await prisma.lead.findUnique({
-      where: { id },
+      where: { 
+        id: id,
+        userId: userId 
+      },
       include: {
         logs: {
-          orderBy: { date: 'desc' }
+          orderBy: { date: 'desc' } 
+        },
+        invoices: {
+          orderBy: { createdAt: 'desc' }
         }
+        // ---------------------
       }
     });
 
