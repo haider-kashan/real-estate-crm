@@ -478,21 +478,41 @@ export default function LeadClient({ dbLead, allLeads = [] }: { dbLead: any, all
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-20">
             <h3 className="text-sm font-bold text-gray-900 uppercase mb-3">Contact Info</h3>
             <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <a href={`tel:${lead.phone || ''}`} className="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100 active:scale-95 transition-transform hover:bg-gray-100 cursor-pointer">
                     <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">📞</div>
-                    <div>
-                        <p className="text-xs text-gray-400 font-bold uppercase">Phone</p>
+                    <div className="flex-1">
+                        <p className="text-xs text-gray-500 font-bold uppercase">Phone Number</p>
                         <p className="text-sm font-bold text-gray-900">{lead.phone}</p>
                     </div>
-                </div>
+                    <div className="text-gray-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                </a>
+
+                {lead.email && (
+                    <a href={`mailto:${lead.email}`} className="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100 active:scale-95 transition-transform hover:bg-gray-100 cursor-pointer">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">✉️</div>
+                        <div className="flex-1 overflow-hidden">
+                            <p className="text-xs text-gray-500 font-bold uppercase">Email Address</p>
+                            <p className="text-sm font-bold text-gray-900 truncate">{lead.email}</p>
+                        </div>
+                        <div className="text-gray-400">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </div>
+                    </a>
+                )}
+
                 {lead.whatsapp && (
-                    <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                    <a href={`https://wa.me/${String(lead.whatsapp || lead.phone || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-green-50 p-3 rounded-xl border border-green-100/50 active:scale-95 transition-transform hover:bg-green-100 cursor-pointer">
                         <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600">💬</div>
-                        <div>
+                        <div className="flex-1">
                             <p className="text-xs text-green-700/60 font-bold uppercase">WhatsApp</p>
                             <p className="text-sm font-bold text-green-800">{lead.whatsapp}</p>
                         </div>
-                    </div>
+                        <div className="text-green-600/50">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </div>
+                    </a>
                 )}
             </div>
         </div>
@@ -503,17 +523,16 @@ export default function LeadClient({ dbLead, allLeads = [] }: { dbLead: any, all
       <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 p-4 z-40 pb-6 safe-area-pb">
         <div className="flex gap-3 max-w-lg mx-auto">
           <a 
-            href={`tel:${lead.phone}`} 
-            onClick={() => trackEvent('click_call')} 
+            href={`tel:${lead.phone || ''}`} 
             className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
             Call
           </a>
           <a 
-            href={`https://wa.me/${(lead.whatsapp || lead.phone).replace(/[^0-9]/g, '')}`} 
+            href={`https://wa.me/${String(lead.whatsapp || lead.phone || '').replace(/[^0-9]/g, '')}`} 
             target="_blank" 
-            onClick={() => trackEvent('click_whatsapp')}
+            rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform"
           >
              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
