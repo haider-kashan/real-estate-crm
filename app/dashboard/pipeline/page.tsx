@@ -20,7 +20,7 @@ export default async function PipelinePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-[100px] flex flex-col overflow-hidden">
-      <HeaderBar user={session.user as any} />
+      <HeaderBar user={session.user as any} title="Pipeline" />
       
       <div className="px-4 py-4 shrink-0">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight">Pipeline</h1>

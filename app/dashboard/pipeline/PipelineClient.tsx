@@ -136,8 +136,9 @@ export default function PipelineClient({ initialLeads }: { initialLeads: Lead[] 
                                         destination: { droppableId: e.target.value, index: 0 },
                                         reason: 'DROP',
                                         type: 'DEFAULT',
-                                        mode: 'FLUID'
-                                    });
+                                        mode: 'FLUID',
+                                        combine: null
+                                    } as any);
                                  }}
                                >
                                   {COLUMNS.map(c => (

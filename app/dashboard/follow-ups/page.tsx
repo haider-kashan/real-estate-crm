@@ -26,7 +26,7 @@ export default async function FollowUpsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-[100px] flex flex-col">
-      <HeaderBar user={session.user as any} />
+      <HeaderBar user={session.user as any} title="Tasks" />
       
       <div className="px-4 py-4">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight">All Tasks</h1>
