@@ -428,21 +428,23 @@ export async function replenishSandboxPool(count: number = 20) {
       }
     });
 
-    // INJECT DUMMY DATA WITH NESTED RELATIONS
-    for (const dummy of demoLeads) {
-      await prisma.lead.create({
-        data: {
-          ...dummy.leadInfo,
-          userId: demoUser.id,
-          logs: {
-            create: dummy.logs.map((log: any) => ({ ...log, userId: demoUser.id }))
-          },
-          invoices: {
-            create: dummy.invoices.map((invoice: any) => ({ ...invoice, userId: demoUser.id }))
+    // INJECT DUMMY DATA WITH NESTED RELATIONS (Concurrently for speed!)
+    await Promise.all(
+      demoLeads.map(dummy => 
+        prisma.lead.create({
+          data: {
+            ...dummy.leadInfo,
+            userId: demoUser.id,
+            logs: {
+              create: dummy.logs.map((log: any) => ({ ...log, userId: demoUser.id }))
+            },
+            invoices: {
+              create: dummy.invoices.map((invoice: any) => ({ ...invoice, userId: demoUser.id }))
+            }
           }
-        }
-      });
-    }
+        })
+      )
+    );
 
     // INJECT DEMO ANALYTICS EVENTS (Mock traffic data)
     const mockEvents = [];
