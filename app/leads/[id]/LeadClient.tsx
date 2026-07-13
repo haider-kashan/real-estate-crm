@@ -489,21 +489,6 @@ export default function LeadClient({ dbLead, allLeads = [] }: { dbLead: any, all
                     </div>
                 </a>
 
-                {lead.whatsapp && (
-                    <a href={`https://wa.me/${lead.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#25D366]/5 p-3 rounded-xl border border-[#25D366]/20 active:scale-95 transition-transform hover:bg-[#25D366]/10 cursor-pointer">
-                        <div className="w-8 h-8 bg-[#25D366]/20 rounded-full flex items-center justify-center text-[#25D366]">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-xs text-[#25D366] font-bold uppercase opacity-80">WhatsApp</p>
-                            <p className="text-sm font-bold text-gray-900">{lead.whatsapp}</p>
-                        </div>
-                        <div className="text-[#25D366]">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                        </div>
-                    </a>
-                )}
-
                 {lead.email && (
                     <a href={`mailto:${lead.email}`} className="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100 active:scale-95 transition-transform hover:bg-gray-100 cursor-pointer">
                         <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">✉️</div>
@@ -517,14 +502,16 @@ export default function LeadClient({ dbLead, allLeads = [] }: { dbLead: any, all
                     </a>
                 )}
 
-                {lead.whatsapp && (
-                    <a href={`https://wa.me/${String(lead.whatsapp || lead.phone || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-green-50 p-3 rounded-xl border border-green-100/50 active:scale-95 transition-transform hover:bg-green-100 cursor-pointer">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600">💬</div>
-                        <div className="flex-1">
-                            <p className="text-xs text-green-700/60 font-bold uppercase">WhatsApp</p>
-                            <p className="text-sm font-bold text-green-800">{lead.whatsapp}</p>
+                {(lead.whatsapp || lead.phone) && (
+                    <a href={`https://wa.me/${String(lead.whatsapp || lead.phone || '').replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 bg-[#25D366]/5 p-3 rounded-xl border border-[#25D366]/20 active:scale-95 transition-transform hover:bg-[#25D366]/10 cursor-pointer">
+                        <div className="w-8 h-8 bg-[#25D366]/20 rounded-full flex items-center justify-center text-[#25D366]">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
                         </div>
-                        <div className="text-green-600/50">
+                        <div className="flex-1">
+                            <p className="text-xs text-[#25D366] font-bold uppercase opacity-80">WhatsApp</p>
+                            <p className="text-sm font-bold text-gray-900">{lead.whatsapp || lead.phone}</p>
+                        </div>
+                        <div className="text-[#25D366]">
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div>
                     </a>
