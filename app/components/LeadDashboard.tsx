@@ -33,7 +33,6 @@ export default function LeadDashboard({
   const [activeStatus, setActiveStatus] = useState('all');
   const [filters, setFilters] = useState({ location: '', minPrice: '', maxPrice: '', propertyType: '' });
   const [sortBy, setSortBy] = useState('newest');
-  const [showDemoBanner, setShowDemoBanner] = useState(true);
 
   const handleLoadMore = async () => {
     setIsLoadingMore(true);
@@ -203,31 +202,7 @@ export default function LeadDashboard({
 
       <AddLeadModal isOpen={isModalOpen} onClose={() => router.back()} department={department} />
 
-      {/* --- EVALUATOR ONBOARDING BANNER --- */}
-      {user?.isDemo && showDemoBanner && (
-        <div className="mx-3 mt-4 p-4 bg-gradient-to-br from-gray-900 to-black rounded-2xl shadow-lg relative overflow-hidden">
-           <div className="absolute -right-4 -top-4 text-6xl opacity-10">✨</div>
-           <button onClick={() => setShowDemoBanner(false)} className="absolute top-3 right-3 text-gray-400 hover:text-white bg-white/10 p-1.5 rounded-full backdrop-blur-md">
-             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-           </button>
-           <h3 className="text-white font-black mb-1">Evaluator Guide</h3>
-           <p className="text-gray-300 text-xs mb-3">Welcome to the Sandbox! Here's what to test:</p>
-           <ul className="space-y-2 text-xs font-medium">
-             <li className="flex items-start gap-2">
-               <span className="bg-amber-500/20 text-amber-400 p-1 rounded">1</span>
-               <span className="text-gray-200 mt-0.5">Open the <span className="text-amber-400 font-bold">✨ Matches Hub</span> (bottom nav) to see the Smart Engine automatically pair overlapping deals.</span>
-             </li>
-             <li className="flex items-start gap-2">
-               <span className="bg-blue-500/20 text-blue-400 p-1 rounded">2</span>
-               <span className="text-gray-200 mt-0.5">Switch to the <span className="text-white font-bold">Pipeline</span> tab below to test the Drag & Drop Kanban board.</span>
-             </li>
-             <li className="flex items-start gap-2">
-               <span className="bg-green-500/20 text-green-400 p-1 rounded">3</span>
-               <span className="text-gray-200 mt-0.5">Edit a lead, set a future follow-up date, and watch it appear in <span className="text-white font-bold">Tasks</span>.</span>
-             </li>
-           </ul>
-        </div>
-      )}
+
 
       <div className="p-3 space-y-3 flex-1 pb-32">
         {/* --- MAIN LIST --- */}
