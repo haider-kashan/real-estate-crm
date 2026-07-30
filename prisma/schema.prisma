@@ -105,12 +105,6 @@ model Invoice {
   @@map("invoices")
 }
 
-model AllowedUser {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-}
-
 model AnalyticsEvent {
   id        String   @id @default(cuid())
   eventName String   // e.g., "click_call", "click_whatsapp", "generate_invoice"

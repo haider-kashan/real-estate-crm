@@ -210,7 +210,7 @@ export default function InvoicePDF({ data }: InvoicePDFProps) {
             ) : (
               <>
                 <Text style={styles.noteText}>1. Payment is due within 7 days.</Text>
-                <Text style={styles.noteText}>2. Please make cheques payable to "{data.agencyName}".</Text>
+                <Text style={styles.noteText}>2. Please make cheques payable to &quot;{data.agencyName}&quot;.</Text>
                 <Text style={[styles.noteText, { marginTop: 10, fontStyle: 'italic' }]}>Thank you for your business!</Text>
               </>
             )}

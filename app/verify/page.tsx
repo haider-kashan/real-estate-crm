@@ -73,7 +73,7 @@ function VerifyForm() {
 
       {/* NEW RESEND SECTION */}
       <div className="mt-6 border-t border-gray-100 pt-4 text-center">
-        <p className="text-sm text-gray-500 mb-2">Didn't receive the code or it expired?</p>
+        <p className="text-sm text-gray-500 mb-2">Didn&apos;t receive the code or it expired?</p>
         <button 
           onClick={handleResend}
           disabled={isResending}

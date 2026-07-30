@@ -15,8 +15,6 @@ interface InvoiceModalProps {
 }
 
 export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceModalProps) {
-  if (!isOpen) return null;
-
   const [isGenerating, setIsGenerating] = useState(false);
   const [isFetchingAgency, setIsFetchingAgency] = useState(true); 
   
@@ -75,7 +73,7 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
 
   const handleItemChange = (index: number, field: 'description' | 'amount', value: string | number) => {
     const newItems = [...items];
-    // @ts-ignore
+    // @ts-expect-error - bypassing type check
     newItems[index][field] = value;
     setItems(newItems);
   };
@@ -129,6 +127,8 @@ export default function InvoiceModal({ isOpen, onClose, lead, type }: InvoiceMod
       setIsGenerating(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4 animate-in fade-in duration-200">

@@ -57,6 +57,7 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
   // Reset when opening
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedDept(department === 'all' ? null : department);
       setRole(forcedType || (department === 'rentals' ? 'tenant' : 'buyer'));
       setUseSamePhone(false);
@@ -71,13 +72,6 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
     }
   }, [isOpen, department, forcedType]);
 
-  // Sync WhatsApp
-  useEffect(() => {
-    if (useSamePhone) {
-      setFormData(prev => ({ ...prev, whatsapp: prev.phone }));
-    }
-  }, [formData.phone, useSamePhone]);
-
   const toggleFeature = (key: string) => {
     setFormData(prev => ({
       ...prev,
@@ -88,38 +82,39 @@ export default function AddLeadModal({ isOpen, onClose, forcedType, department =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Calculate final WhatsApp value dynamically
+    const finalWhatsapp = useSamePhone ? formData.phone : formData.whatsapp;
+
     // --- VALIDATION CHECKS ---
     if (!formData.name.trim()) { alert("Please enter the Full Name."); return; }
-if (!formData.phone.trim()) { alert("Please enter the Primary Call number."); return; }
+    if (!formData.phone.trim()) { alert("Please enter the Primary Call number."); return; }
 
-const priceValue = ['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand;
+    const priceValue = ['buyer', 'tenant'].includes(role) ? formData.budget : formData.demand;
 
-if (!priceValue?.trim()) {
-  alert("Please enter the Budget/Demand price.");
-  return;
-}
+    if (!priceValue?.trim()) {
+      alert("Please enter the Budget/Demand price.");
+      return;
+    }
 
-if (!/^03\d{9}$/.test(formData.phone)) {
-  alert("Phone number must be 11 digits and start with 03.");
-  return;
-}
+    if (!/^03\d{9}$/.test(formData.phone)) {
+      alert("Phone number must be 11 digits and start with 03.");
+      return;
+    }
 
-if (formData.whatsapp && !/^03\d{9}$/.test(formData.whatsapp)) {
-  alert("WhatsApp number must be 11 digits and start with 03.");
-  return;
-}
+    if (finalWhatsapp && !/^03\d{9}$/.test(finalWhatsapp)) {
+      alert("WhatsApp number must be 11 digits and start with 03.");
+      return;
+    }
 
-if (!formData.location.trim()) {
-  alert("Please enter location.");
-  return;
-}
+    if (!formData.location.trim()) {
+      alert("Please enter location.");
+      return;
+    }
 
-if (!/^\d+$/.test(priceValue)) {
-  alert("Price must contain numbers only.");
-  return;
-}
-
-setLoading(true);
+    if (!/^\d+$/.test(priceValue)) {
+      alert("Price must contain numbers only.");
+      return;
+    }
 
     setLoading(true); // Start Loading
 
@@ -128,7 +123,7 @@ setLoading(true);
     const payload = {
       name: formData.name,
       phone: formData.phone,
-      whatsapp: formData.whatsapp,
+      whatsapp: finalWhatsapp,
       location: formData.location,
       type: role,
       status: formData.status,
@@ -374,7 +369,7 @@ setLoading(true);
                   maxLength={11}
                   className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none ${useSamePhone ? 'bg-gray-100 text-gray-400' : 'bg-white'}`}
                   placeholder="03001234567"
-                  value={formData.whatsapp}
+                  value={useSamePhone ? formData.phone : formData.whatsapp}
                   onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, '') })}
                   disabled={useSamePhone}
                 />

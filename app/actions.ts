@@ -154,7 +154,7 @@ export async function addLead(data: any) {
     });
 
     revalidatePath('/');
-    // @ts-ignore
+    // @ts-expect-error - bypassing type check
     revalidateTag(`leads-${userId}`);
 
     return {
@@ -220,7 +220,7 @@ export async function updateLead(id: number, data: any) {
 
     revalidatePath('/');
     revalidatePath(`/leads/${id}`);
-    // @ts-ignore
+    // @ts-expect-error - bypassing type check
     revalidateTag(`leads-${userId}`);
 
     return {
@@ -258,7 +258,7 @@ export async function deleteLead(id: number) {
     });
 
     revalidatePath('/');
-    // @ts-ignore
+    // @ts-expect-error - bypassing type check
     revalidateTag(`leads-${userId}`);
 
     return {

@@ -55,7 +55,7 @@ export default async function AnalyticsPage() {
         title="My Analytics" 
         subtitle="Personal Performance Tracking"
         showBack={true} 
-        // @ts-ignore
+        // @ts-expect-error - bypassing type check
         user={{ name: session.user.name || 'User', email: session.user.email }}
       />
 

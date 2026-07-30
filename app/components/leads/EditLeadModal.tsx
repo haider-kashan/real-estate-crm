@@ -19,7 +19,9 @@ export default function EditLeadModal({ isOpen, onClose, lead, onSave }: EditLea
 
   // Initialize form when modal opens
   useEffect(() => {
+     
     if (lead && isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEditForm({
         ...lead,
         // Ensure features object exists so checkboxes don't crash
@@ -31,43 +33,42 @@ export default function EditLeadModal({ isOpen, onClose, lead, onSave }: EditLea
       // Check if phone and whatsapp are currently the same
       if (lead.phone && lead.whatsapp && lead.phone === lead.whatsapp) {
         setUseSamePhone(true);
+      } else {
+        setUseSamePhone(false);
       }
     }
   }, [lead, isOpen]);
-
-  // Sync WhatsApp with Phone if "Same as above" is checked
-  useEffect(() => {
-    if (useSamePhone && editForm) {
-      setEditForm((prev: any) => ({ ...prev, whatsapp: prev.phone }));
-    }
-  }, [editForm?.phone, useSamePhone]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editForm) return;
 
+    // Calculate final WhatsApp value dynamically
+    const finalWhatsapp = useSamePhone ? editForm.phone : editForm.whatsapp;
+    const formToSave = { ...editForm, whatsapp: finalWhatsapp };
+
     // --- VALIDATION CHECKS ---
-    if (!editForm.name?.trim()) {
+    if (!formToSave.name?.trim()) {
       alert("Please enter the Full Name.");
       return;
     }
-    if (!editForm.phone?.trim()) {
+    if (!formToSave.phone?.trim()) {
       alert("Please enter the Primary Call number.");
       return;
     }
-    if (!editForm.propertyType?.trim()) {
+    if (!formToSave.propertyType?.trim()) {
       alert("Please select or enter a Property Type.");
       return;
     }
     // Check Budget or Demand depending on type
-    const priceField = ['buyer', 'tenant'].includes(editForm.type) ? editForm.budget : editForm.demand;
+    const priceField = ['buyer', 'tenant'].includes(formToSave.type) ? formToSave.budget : formToSave.demand;
     if (!priceField?.toString().trim()) {
       alert("Please enter the Budget/Demand price.");
       return;
     }
 
     // Pass data back to Parent (which handles the DB save)
-    onSave(editForm);
+    onSave(formToSave);
     onClose();
   };
 
@@ -163,7 +164,7 @@ export default function EditLeadModal({ isOpen, onClose, lead, onSave }: EditLea
               </div>
               <input type="tel" className={`w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none ${useSamePhone ? 'bg-gray-100 text-gray-500' : ''}`} 
                 placeholder="0300-1234567"
-                value={editForm.whatsapp || editForm.phone} 
+                value={useSamePhone ? editForm.phone : (editForm.whatsapp || '')} 
                 onChange={(e) => setEditForm({...editForm, whatsapp: e.target.value})}
                 disabled={useSamePhone}
               />

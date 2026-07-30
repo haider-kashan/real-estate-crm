@@ -28,11 +28,23 @@ export default function LeadDashboard({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isModalOpen = searchParams.get('adding') === 'true';
+  
+  // --- ALL HOOKS AT THE VERY TOP (Rules of Hooks) ---
   const [currentLeads, setCurrentLeads] = useState(initialData); 
   const [activeTab, setActiveTab] = useState(tabs ? tabs[0].id : 'all');
   const [activeStatus, setActiveStatus] = useState('all');
   const [filters, setFilters] = useState({ location: '', minPrice: '', maxPrice: '', propertyType: '' });
   const [sortBy, setSortBy] = useState('newest');
+  const [offset, setOffset] = useState(20);
+  const [hasMore, setHasMore] = useState(initialData.length >= 20);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentLeads(initialData);
+    setOffset(20); // Fixed cascading mismatch (was 10, now properly matches the 20 load chunk)
+    setHasMore(initialData.length >= 20);
+  }, [initialData]);
 
   const handleLoadMore = async () => {
     setIsLoadingMore(true);
@@ -52,16 +64,6 @@ export default function LeadDashboard({
   const accentBorder = department === 'sales' ? 'border-blue-600' : (department === 'rentals' ? 'border-indigo-600' : 'border-gray-900');
   const activeChipBg = department === 'sales' ? 'bg-blue-600' : (department === 'rentals' ? 'bg-indigo-600' : 'bg-gray-900');
   const statuses = ['all', 'new', 'contacted', 'interested', 'negotiation', 'closed', 'dead'];
-  const [offset, setOffset] = useState(20);
-  const [hasMore, setHasMore] = useState(initialData.length >= 20);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  useEffect(() => {
-    setCurrentLeads(initialData);
-    setOffset(10);
-    setHasMore(initialData.length >= 20);
-  }, [initialData]);
-
 
   // --- 0. DATA TRANSLATION LAYER (Database -> UI) ---
   const processedData = useMemo(() => {
@@ -78,7 +80,6 @@ export default function LeadDashboard({
     const now = new Date();
     const todayStr = now.toDateString();
 
-    // @ts-ignore
     return processedData.filter(l => {
       const status = (l.status || '').toLowerCase();
       if (status === 'dead' || status === 'closed') {
@@ -91,7 +92,6 @@ export default function LeadDashboard({
         isReminderDue = date < now || date.toDateString() === todayStr;
       }
 
-      // @ts-ignore
       const health = getLeadHealth(l.lastContactDate, l.dateAdded);
       const isCritical = health.status === 'Critical';
 
@@ -104,7 +104,6 @@ export default function LeadDashboard({
 
   const headerReminders = urgentLeads.map(l => {
       const now = new Date();
-      // @ts-ignore
       const health = getLeadHealth(l.lastContactDate, l.dateAdded);
       
       let type: 'overdue' | 'today' | 'critical' | null = null;
@@ -139,13 +138,11 @@ export default function LeadDashboard({
       result = result.filter(l => l.location?.toLowerCase().includes(q) || l.name.toLowerCase().includes(q));
     }
     if (filters.propertyType) result = result.filter(l => l.propertyType === filters.propertyType);
-    // @ts-ignore
     if (filters.minPrice) result = result.filter(l => parsePrice(l.budget || l.demand) >= parseFloat(filters.minPrice));
-    // @ts-ignore
     if (filters.maxPrice) result = result.filter(l => parsePrice(l.budget || l.demand) <= parseFloat(filters.maxPrice));
     
-    if (sortBy === 'price_asc') { /* @ts-ignore */ result.sort((a, b) => parsePrice(a.budget || a.demand) - parsePrice(b.budget || b.demand)); }
-    else if (sortBy === 'price_desc') { /* @ts-ignore */ result.sort((a, b) => parsePrice(b.budget || b.demand) - parsePrice(a.budget || a.demand)); }
+    if (sortBy === 'price_asc') { result.sort((a, b) => parsePrice(a.budget || a.demand) - parsePrice(b.budget || b.demand)); }
+    else if (sortBy === 'price_desc') {result.sort((a, b) => parsePrice(b.budget || b.demand) - parsePrice(a.budget || a.demand)); }
     else { result.sort((a, b) => b.id - a.id); }
     return result;
   }, [filters, sortBy, activeTab, activeStatus, processedData]);
@@ -253,7 +250,6 @@ export default function LeadDashboard({
           </div>
         ) : (
           filteredLeads.map((lead) => {
-             // @ts-ignore
              const health = getLeadHealth(lead.lastContactDate, lead.dateAdded);
              
              // --- LOGIC: Hide Health Dot for Dead/Closed leads ---
@@ -316,7 +312,6 @@ export default function LeadDashboard({
                  </div>
                  
                  {/* Reminder Indicator */}
-                 {/* @ts-ignore */}
                  {lead.followUp && new Date(lead.followUp) > new Date() && (
                    <div className="ml-3 mt-2 flex items-center gap-1.5 bg-yellow-50 w-fit px-2 py-1 rounded-md">
                       <span className="text-[10px] font-bold text-yellow-700 flex items-center gap-1">⏰ Due: {new Date(lead.followUp).toLocaleDateString('en-US', {month:'short', day:'numeric'})}</span>
@@ -328,12 +323,10 @@ export default function LeadDashboard({
                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{['buyer', 'tenant'].includes(lead.type) ? 'Budget Range' : 'Demand Price'}</p>
                    <div className="flex items-center gap-1">
                      <p className={`font-bold text-sm ${['buyer', 'seller'].includes(lead.type) ? 'text-gray-900' : 'text-gray-900'}`}>
-                       {/* @ts-ignore */}
                        {formatIndianNumber(lead.budget || lead.demand || '0')}
                      </p>
                    </div>
                    <p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5 leading-none">
-                     {/* @ts-ignore */}
                      {numberToWordsIndian(lead.budget || lead.demand || '0')}
                    </p>
                  </div>

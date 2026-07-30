@@ -353,7 +353,7 @@ export async function resetPassword(prevState: string | undefined, formData: For
 // --- 10. GENERATE DEMO ACCOUNT (Ephemeral Sandbox) ---
 export async function createDemoAccount() {
   try {
-    let demoPassword = 'demopassword123';
+    const demoPassword = 'demopassword123';
     let demoEmail = '';
 
     // 1. Atomically try to grab an unassigned, pre-generated sandbox from the pool
@@ -370,7 +370,7 @@ export async function createDemoAccount() {
       RETURNING *;
     `;
 
-    let demoUser = assignedUsers[0] || null;
+    const demoUser = assignedUsers[0] || null;
 
     if (demoUser) {
       // INSTANT PATH: Claimed the pre-generated sandbox

@@ -32,6 +32,7 @@ export default function PipelineClient({ initialLeads }: { initialLeads: Lead[] 
 
   // Prevent Next.js hydration mismatch on DND components
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -52,6 +53,9 @@ export default function PipelineClient({ initialLeads }: { initialLeads: Lead[] 
     
     const movedLead = leads[movedLeadIndex];
     
+    // Save the exact previous state before this specific move so we can safely roll back
+    const previousLeads = [...leads];
+    
     // Create new array with updated status for immediate UI feedback
     const newLeads = [...leads];
     newLeads[movedLeadIndex] = { ...movedLead, status: newStatus };
@@ -61,9 +65,9 @@ export default function PipelineClient({ initialLeads }: { initialLeads: Lead[] 
     startTransition(async () => {
       const res = await updateLead(leadId, { status: newStatus });
       if (!res.success) {
-        // Revert Optimistic UI if it fails
+        // Revert Optimistic UI to the exact state before the drop if it fails
         alert("Failed to update status.");
-        setLeads(initialLeads);
+        setLeads(previousLeads);
       } else {
         router.refresh(); // Sync server state invisibly
       }
@@ -138,7 +142,7 @@ export default function PipelineClient({ initialLeads }: { initialLeads: Lead[] 
                                         type: 'DEFAULT',
                                         mode: 'FLUID',
                                         combine: null
-                                    } as any);
+                                    } as DropResult); // <--- FIXED ANY CAST
                                  }}
                                >
                                   {COLUMNS.map(c => (

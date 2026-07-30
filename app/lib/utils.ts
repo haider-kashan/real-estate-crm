@@ -101,7 +101,7 @@ export const findLeadMatches = (lead: any, allLeads: any[]) => {
     const targetLocation = target.location?.toLowerCase().trim() || '';
     const targetPropType = target.propertyType?.toLowerCase().trim() || '';
 
-    let reasons = [];
+    const reasons = [];
 
     // Location Check (fuzzy overlap)
     let locationMatch = false;
