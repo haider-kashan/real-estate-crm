@@ -1,6 +1,6 @@
 # Developer Guide
 
-Welcome to the Real Estate CRM documentation! We use a modular documentation structure to keep the repository clean and easy to navigate.
+Welcome to the EstatePulse documentation! We use a modular documentation structure to keep the repository clean and easy to navigate.
 
 Please refer to the following documents based on what you need to do:
 

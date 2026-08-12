@@ -2,15 +2,14 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import BottomNav from './components/BottomNav';
-// REMOVE: import AddLead ... (We don't need global AddLead anymore, it's inside TopBar)
 
 import { auth } from '@/auth';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Real Estate CRM',
-  description: 'Simple Lead Manager',
+  title: 'EstatePulse | EstatePulse',
+  description: 'Manage your property leads and pipelines.',
 };
 
 export const viewport = {

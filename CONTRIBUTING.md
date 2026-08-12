@@ -1,4 +1,4 @@
-# Contributing to Real Estate CRM
+# Contributing to EstatePulse
 
 ## Tech Stack
 
@@ -42,16 +42,17 @@ main (production) ← dev (integration) ← feat/your-feature
 
 ### Branch Types
 
-| Prefix | Purpose | Merges Into |
-|--------|---------|-------------|
-| `feat/` | New features | `dev` |
-| `fix/` | Bug fixes | `dev` |
-| `hotfix/` | Urgent production fixes | `main` (then backport to `dev`) |
-| `chore/` | Refactors, docs, tooling | `dev` |
+| Prefix    | Purpose                  | Merges Into                     |
+| --------- | ------------------------ | ------------------------------- |
+| `feat/`   | New features             | `dev`                           |
+| `fix/`    | Bug fixes                | `dev`                           |
+| `hotfix/` | Urgent production fixes  | `main` (then backport to `dev`) |
+| `chore/`  | Refactors, docs, tooling | `dev`                           |
 
 ### Workflow
 
 1. **Always branch from `dev`** (never from `main` directly):
+
    ```bash
    git checkout dev
    git pull origin dev
@@ -59,12 +60,14 @@ main (production) ← dev (integration) ← feat/your-feature
    ```
 
 2. **Make your changes**, commit with descriptive messages:
+
    ```bash
    git add .
    git commit -m "feat: add scheduled follow-ups tab"
    ```
 
 3. **Push and open a Pull Request** to `dev`:
+
    ```bash
    git push origin feat/my-new-feature
    # Then open a PR on GitHub: feat/my-new-feature → dev

@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-This document covers common errors encountered during local development and deployment of the Real Estate CRM.
+This document covers common errors encountered during local development and deployment of the EstatePulse.
 
 ## 1. Database Connection Errors (`P1001` / `P2024`)
 

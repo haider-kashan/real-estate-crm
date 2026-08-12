@@ -58,7 +58,7 @@ export default async function Home() {
 
   return (
     <LeadDashboard 
-      title="Real Estate CRM" 
+      title="EstatePulse" 
       initialData={leads} 
       department="all" 
       reminders={myReminders}

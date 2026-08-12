@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This document outlines the standard operating procedures for deploying the Real Estate CRM to production. The application is hosted on **Vercel** (compute/hosting) and **Supabase** (database).
+This document outlines the standard operating procedures for deploying the EstatePulse to production. The application is hosted on **Vercel** (compute/hosting) and **Supabase** (database).
 
 ---
 

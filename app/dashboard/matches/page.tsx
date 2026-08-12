@@ -2,7 +2,7 @@ import { getLeads } from '../../actions';
 import MatchesClient from './MatchesClient';
 
 export const metadata = {
-  title: 'Smart Matches | Real Estate CRM',
+  title: 'Smart Matches | EstatePulse',
   description: 'View algorithmic deal matches',
 };
 

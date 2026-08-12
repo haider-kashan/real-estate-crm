@@ -1,6 +1,6 @@
 # API & Data Fetching Reference
 
-The Real Estate CRM operates as a modern Next.js monolith. To maximize type safety and reduce client-side JavaScript, we favor **Server Actions** over traditional REST endpoints for all internal client-to-server communication. Traditional API routes (`app/api/`) are strictly reserved for external webhooks, automated cron jobs, and NextAuth.js.
+The EstatePulse operates as a modern Next.js monolith. To maximize type safety and reduce client-side JavaScript, we favor **Server Actions** over traditional REST endpoints for all internal client-to-server communication. Traditional API routes (`app/api/`) are strictly reserved for external webhooks, automated cron jobs, and NextAuth.js.
 
 ---
 

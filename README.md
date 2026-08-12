@@ -1,4 +1,4 @@
-# Real Estate CRM
+# EstatePulse
 
 [🔗 View Live Application](https://real-estate-crm-obsa.vercel.app/)
 

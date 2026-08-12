@@ -1,6 +1,6 @@
 # Database & Data Model
 
-The Real Estate CRM relies on a strict, relational database architecture. We use **PostgreSQL** (hosted via Supabase) to ensure data integrity, paired with **Prisma ORM** as our strongly typed database client and Single Source of Truth (SSOT).
+The EstatePulse relies on a strict, relational database architecture. We use **PostgreSQL** (hosted via Supabase) to ensure data integrity, paired with **Prisma ORM** as our strongly typed database client and Single Source of Truth (SSOT).
 
 ---
 
