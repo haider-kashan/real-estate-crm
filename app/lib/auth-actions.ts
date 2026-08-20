@@ -69,7 +69,7 @@ export async function authenticate(prevState: string | undefined, formData: Form
 
     await signIn('credentials', {
       ...Object.fromEntries(formData),
-      redirectTo: '/',
+      redirectTo: '/dashboard',
     });
   } catch (error) {
     if ((error as Error).message.includes('NEXT_REDIRECT')) {
@@ -392,7 +392,7 @@ export async function createDemoAccount() {
     await signIn('credentials', {
       email: demoEmail,
       password: demoPassword,
-      redirectTo: '/',
+      redirectTo: '/dashboard',
     });
 
   } catch (error) {
@@ -469,5 +469,5 @@ export async function replenishSandboxPool(count: number = 20) {
 }
 
 export async function authenticateGoogle() {
-  await signIn('google', { redirectTo: '/' });
+  await signIn('google', { redirectTo: '/dashboard' });
 }
