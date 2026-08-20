@@ -28,6 +28,7 @@ export default function PipelineClient({ initialLeads }: { initialLeads: Lead[] 
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [isMounted, setIsMounted] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [activeMobileStage, setActiveMobileStage] = useState<string>('all');
   const router = useRouter();
 
   // Prevent Next.js hydration mismatch on DND components
@@ -76,105 +77,142 @@ export default function PipelineClient({ initialLeads }: { initialLeads: Lead[] 
 
   if (!isMounted) return null; // Wait for client render
 
-  return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      {/* 
-        MOBILE UX UPDATE 2:
-        Switched to a Vertical Stack layout! 
-        Mobile browsers handle vertical scrolling natively during drag events 
-        much better than horizontal scrolling.
-      */}
-      <div className="flex flex-col md:flex-row md:overflow-x-auto h-full w-full px-4 gap-6 pb-24 pt-2">
-        
-        {COLUMNS.map((col) => {
-          const colLeads = leads.filter(l => l.status === col.id);
-          
-          return (
-            <div 
-              key={col.id} 
-              className="w-full md:w-80 shrink-0 flex flex-col bg-gray-200/50 rounded-2xl border border-gray-200 shadow-sm max-h-[400px] md:max-h-full md:h-[calc(100vh-140px)]"
-            >
-              {/* Column Header */}
-              <div className="px-4 py-3 border-b border-gray-200 bg-white/50 backdrop-blur-sm rounded-t-2xl flex justify-between items-center shrink-0">
-                <h3 className="font-bold text-gray-900">{col.title}</h3>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${col.color}`}>
-                  {colLeads.length}
-                </span>
-              </div>
+  const filteredColumns = activeMobileStage === 'all' 
+    ? COLUMNS 
+    : COLUMNS.filter(c => c.id === activeMobileStage);
 
-              {/* Droppable Area */}
-              <Droppable droppableId={col.id}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`flex-1 overflow-y-auto p-3 space-y-3 transition-colors ${
-                      snapshot.isDraggingOver ? 'bg-blue-50/50' : ''
-                    }`}
-                  >
-                    {colLeads.map((lead, index) => (
-                      <Draggable key={lead.id.toString()} draggableId={lead.id.toString()} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            onClick={() => router.push(`/leads/${lead.id}`)}
-                            className={`bg-white p-4 rounded-xl shadow-sm border border-gray-100 transition-all ${
-                              snapshot.isDragging ? 'shadow-xl scale-105 rotate-2 z-50 ring-2 ring-blue-500 cursor-grabbing' : 'hover:shadow-md cursor-grab'
-                            }`}
-                          >
-                            <div className="flex justify-between items-start mb-1">
-                               <h4 className="font-bold text-gray-900 text-sm">{lead.name}</h4>
-                               
-                               {/* MOBILE FALLBACK: Quick Move Dropdown */}
-                               <select 
-                                 onClick={(e) => e.stopPropagation()}
-                                 className="text-[10px] font-bold uppercase tracking-wider bg-gray-50 border border-gray-200 rounded px-1 py-0.5 text-gray-500 outline-none"
-                                 value={lead.status}
-                                 onChange={(e) => {
-                                    // Trigger a fake drop result to reuse the same logic
-                                    onDragEnd({
-                                        draggableId: lead.id.toString(),
-                                        source: { droppableId: lead.status, index },
-                                        destination: { droppableId: e.target.value, index: 0 },
-                                        reason: 'DROP',
-                                        type: 'DEFAULT',
-                                        mode: 'FLUID',
-                                        combine: null
-                                    } as DropResult); // <--- FIXED ANY CAST
-                                 }}
-                               >
-                                  {COLUMNS.map(c => (
-                                    <option key={c.id} value={c.id}>{c.title}</option>
-                                  ))}
-                               </select>
-                            </div>
-                            <div className="flex justify-between items-center text-[10px] font-bold text-gray-500 uppercase mt-4 border-t pt-2">
-                               <span>{lead.location || "No location"}</span>
-                               <div className="text-right">
-                                 <span className="block text-gray-800">PKR {formatIndianNumber(lead.budget || lead.demand || "0")}</span>
-                                 <span className="block text-[8px] text-gray-400 mt-0.5 leading-none">{numberToWordsIndian(lead.budget || lead.demand || "0")}</span>
-                               </div>
-                             </div>
-                             <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-50">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-100 px-2 py-1 rounded-md">
-                                   {lead.type}
-                                </span>
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </div>
+  return (
+    <div className="flex flex-col h-full w-full">
+      {/* MOBILE STAGE FILTER SELECTOR */}
+      <div className="md:hidden px-4 pt-2 pb-1 overflow-x-auto whitespace-nowrap scrollbar-none flex gap-1.5 border-b border-gray-100 bg-white">
+        <button
+          onClick={() => setActiveMobileStage('all')}
+          className={`px-3 py-1.5 rounded-full text-xs font-extrabold transition-all ${
+            activeMobileStage === 'all'
+              ? 'bg-gray-900 text-white shadow-xs'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          All Stages ({leads.length})
+        </button>
+        {COLUMNS.map((c) => {
+          const count = leads.filter(l => l.status === c.id).length;
+          return (
+            <button
+              key={c.id}
+              onClick={() => setActiveMobileStage(c.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-extrabold transition-all flex items-center gap-1 ${
+                activeMobileStage === c.id
+                  ? 'bg-gray-900 text-white shadow-xs'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <span>{c.title}</span>
+              <span className="opacity-75 text-[10px]">({count})</span>
+            </button>
           );
         })}
-
       </div>
-    </DragDropContext>
+
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="flex flex-col md:flex-row md:overflow-x-auto h-full w-full px-3 sm:px-4 gap-4 sm:gap-6 pb-28 pt-3">
+          
+          {filteredColumns.map((col) => {
+            const colLeads = leads.filter(l => l.status === col.id);
+            
+            return (
+              <div 
+                key={col.id} 
+                className="w-full md:w-80 shrink-0 flex flex-col bg-gray-200/50 rounded-2xl border border-gray-200 shadow-xs max-h-[450px] md:max-h-full md:h-[calc(100vh-140px)]"
+              >
+                {/* Column Header */}
+                <div className="px-4 py-3 border-b border-gray-200 bg-white/70 backdrop-blur-sm rounded-t-2xl flex justify-between items-center shrink-0">
+                  <h3 className="font-extrabold text-gray-900 text-sm">{col.title}</h3>
+                  <span className={`text-xs font-extrabold px-2.5 py-1 rounded-full ${col.color}`}>
+                    {colLeads.length}
+                  </span>
+                </div>
+
+                {/* Droppable Area */}
+                <Droppable droppableId={col.id}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`flex-1 overflow-y-auto p-3 space-y-3 transition-colors ${
+                        snapshot.isDraggingOver ? 'bg-blue-50/50' : ''
+                      }`}
+                    >
+                      {colLeads.length === 0 ? (
+                        <div className="py-6 text-center text-xs font-medium text-gray-400">
+                          No leads in {col.title}
+                        </div>
+                      ) : (
+                        colLeads.map((lead, index) => (
+                          <Draggable key={lead.id.toString()} draggableId={lead.id.toString()} index={index}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                onClick={() => router.push(`/leads/${lead.id}`)}
+                                className={`bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 transition-all ${
+                                  snapshot.isDragging ? 'shadow-xl scale-105 rotate-2 z-50 ring-2 ring-blue-500 cursor-grabbing' : 'hover:shadow-md cursor-grab'
+                                }`}
+                              >
+                                <div className="flex justify-between items-center gap-2 mb-2">
+                                   <h4 className="font-extrabold text-gray-900 text-sm truncate">{lead.name}</h4>
+                                   
+                                   {/* MOBILE ENHANCED: Quick Move Dropdown with 36px+ Touch Target */}
+                                   <select 
+                                     onClick={(e) => e.stopPropagation()}
+                                     className="text-xs font-bold uppercase tracking-wider bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 min-h-[36px] text-gray-700 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                     value={lead.status}
+                                     onChange={(e) => {
+                                        onDragEnd({
+                                            draggableId: lead.id.toString(),
+                                            source: { droppableId: lead.status, index },
+                                            destination: { droppableId: e.target.value, index: 0 },
+                                            reason: 'DROP',
+                                            type: 'DEFAULT',
+                                            mode: 'FLUID',
+                                            combine: null
+                                        } as DropResult);
+                                     }}
+                                   >
+                                      {COLUMNS.map(c => (
+                                        <option key={c.id} value={c.id}>{c.title}</option>
+                                      ))}
+                                   </select>
+                                </div>
+
+                                <div className="flex justify-between items-center text-xs font-bold text-gray-500 mt-3 border-t border-gray-100 pt-2">
+                                   <span className="truncate max-w-[120px]">{lead.location || "No location"}</span>
+                                   <div className="text-right">
+                                     <span className="block text-gray-900 font-extrabold">PKR {formatIndianNumber(lead.budget || lead.demand || "0")}</span>
+                                     <span className="block text-[9px] text-gray-400 mt-0.5 leading-none uppercase font-bold">{numberToWordsIndian(lead.budget || lead.demand || "0")}</span>
+                                   </div>
+                                 </div>
+                                 <div className="flex justify-between items-center mt-2.5 pt-2 border-t border-gray-50">
+                                    <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-wider bg-gray-100 px-2 py-0.5 rounded-md">
+                                       {lead.type}
+                                    </span>
+                                </div>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))
+                      )}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            );
+          })}
+
+        </div>
+      </DragDropContext>
+    </div>
   );
 }

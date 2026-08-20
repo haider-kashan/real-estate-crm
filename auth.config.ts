@@ -8,23 +8,29 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       
-      // 1. Identify where the user is trying to go
-      const isOnDashboard = nextUrl.pathname === '/'; // The Main Page
-      const isOnLogin = nextUrl.pathname.startsWith('/login');
-      const isOnRegister = nextUrl.pathname.startsWith('/register');
+      const pathname = nextUrl.pathname;
+      const isOnLanding = pathname === '/';
+      const isOnLogin = pathname.startsWith('/login');
+      const isOnRegister = pathname.startsWith('/register');
+      const isProtectedRoute = 
+        pathname.startsWith('/dashboard') || 
+        pathname.startsWith('/leads') || 
+        pathname.startsWith('/analytics') || 
+        pathname.startsWith('/admin') || 
+        pathname.startsWith('/profile');
 
-      // 2. PROTECT THE DASHBOARD
-      if (isOnDashboard) {
-        if (isLoggedIn) return true; // Allowed
-        return false; // Redirect to /login
+      // 1. If logged in and visiting Landing (/), Login, or Register -> redirect to /dashboard
+      if (isLoggedIn && (isOnLanding || isOnLogin || isOnRegister)) {
+        return Response.redirect(new URL('/dashboard', nextUrl));
       }
 
-      // 3. REDIRECT IF ALREADY LOGGED IN
-      if (isLoggedIn && (isOnLogin || isOnRegister)) {
-        return Response.redirect(new URL('/', nextUrl)); // Send to Dashboard
+      // 2. Protect dashboard and main app subroutes
+      if (isProtectedRoute) {
+        if (isLoggedIn) return true;
+        return false; // Redirects to /login
       }
 
-      return true; // Allow access to other pages (like images/static)
+      return true; // Allow access to public/static pages
     },
     async jwt({ token, user }) {
       if (user) {

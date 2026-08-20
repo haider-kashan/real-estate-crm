@@ -51,39 +51,45 @@ export default function MatchesClient({ leads }: { leads: any[] }) {
   return (
     <div className="space-y-4">
       {pairedMatches.map((pair, idx) => (
-        <div key={idx} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 relative overflow-hidden group">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-50 text-amber-700 text-[10px] font-bold px-3 py-1 rounded-full border border-amber-100 shadow-sm z-10 whitespace-nowrap flex items-center gap-1 group-hover:scale-105 transition-transform">
+        <div key={idx} className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-sm border border-gray-100 relative overflow-hidden group">
+            
+            {/* Top Match Reason Badge (Prevents mobile overlay text blocking) */}
+            <div className="mb-3 text-center">
+              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 text-[10px] sm:text-xs font-extrabold px-3 py-1.5 rounded-full border border-amber-200/80 shadow-2xs group-hover:scale-105 transition-transform max-w-full text-wrap leading-tight">
                 ✨ {pair.reason}
+              </span>
             </div>
             
-            <div className="flex justify-between items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch gap-2.5 sm:gap-4 relative">
                 {/* Lead 1 (Usually Buyer) */}
-                <Link href={`/leads/${pair.lead1.id}`} className="flex-1 bg-gray-50/80 hover:bg-blue-50/50 rounded-xl p-3 transition-colors cursor-pointer group/card border border-transparent hover:border-blue-100 block">
-                    <span className={`text-[10px] font-bold uppercase tracking-wider mb-1 block ${['buyer', 'tenant'].includes(pair.lead1.type) ? 'text-blue-600' : 'text-purple-600'}`}>
+                <Link href={`/leads/${pair.lead1.id}`} className="flex-1 bg-gray-50/90 hover:bg-blue-50/60 rounded-xl p-3 transition-colors cursor-pointer group/card border border-transparent hover:border-blue-100 block">
+                    <span className={`text-[10px] font-extrabold uppercase tracking-wider mb-1 block ${['buyer', 'tenant'].includes(pair.lead1.type) ? 'text-blue-600' : 'text-purple-600'}`}>
                         {pair.lead1.type}
                     </span>
-                    <h4 className="font-bold text-gray-900 group-hover/card:text-blue-600 truncate">{pair.lead1.name}</h4>
+                    <h4 className="font-bold text-gray-900 group-hover/card:text-blue-600 text-xs sm:text-sm truncate">{pair.lead1.name}</h4>
                     <p className="text-xs text-gray-500 truncate">{pair.lead1.location}</p>
-                    <p className="text-xs font-bold text-gray-900 mt-2">PKR {pair.lead1.budget || pair.lead1.demand}</p>
+                    <p className="text-xs font-bold text-gray-900 mt-1.5">PKR {pair.lead1.budget || pair.lead1.demand}</p>
                 </Link>
 
-                {/* Connection line behind the reason */}
-                <div className="absolute top-1/2 left-[25%] right-[25%] h-px bg-gradient-to-r from-transparent via-amber-200 to-transparent z-0 opacity-50" />
-
                 {/* Lead 2 (Usually Seller) */}
-                <Link href={`/leads/${pair.lead2.id}`} className="flex-1 bg-gray-50/80 hover:bg-purple-50/50 rounded-xl p-3 transition-colors cursor-pointer group/card text-right border border-transparent hover:border-purple-100 block">
-                    <span className={`text-[10px] font-bold uppercase tracking-wider mb-1 block ${['buyer', 'tenant'].includes(pair.lead2.type) ? 'text-blue-600' : 'text-purple-600'}`}>
+                <Link href={`/leads/${pair.lead2.id}`} className="flex-1 bg-gray-50/90 hover:bg-purple-50/60 rounded-xl p-3 transition-colors cursor-pointer group/card text-left sm:text-right border border-transparent hover:border-purple-100 block">
+                    <span className={`text-[10px] font-extrabold uppercase tracking-wider mb-1 block ${['buyer', 'tenant'].includes(pair.lead2.type) ? 'text-blue-600' : 'text-purple-600'}`}>
                         {pair.lead2.type}
                     </span>
-                    <h4 className="font-bold text-gray-900 group-hover/card:text-purple-600 truncate">{pair.lead2.name}</h4>
+                    <h4 className="font-bold text-gray-900 group-hover/card:text-purple-600 text-xs sm:text-sm truncate">{pair.lead2.name}</h4>
                     <p className="text-xs text-gray-500 truncate">{pair.lead2.location}</p>
-                    <p className="text-xs font-bold text-gray-900 mt-2">PKR {pair.lead2.budget || pair.lead2.demand}</p>
+                    <p className="text-xs font-bold text-gray-900 mt-1.5">PKR {pair.lead2.budget || pair.lead2.demand}</p>
                 </Link>
             </div>
             
+            {/* Call Action Triggers with 44px Minimum Touch Target */}
             <div className="mt-3 flex gap-2">
-                <a href={`tel:${pair.lead1.phone}`} className="flex-1 bg-gray-900 text-white text-[11px] font-bold py-2 rounded-lg text-center active:scale-95 transition-transform">Call {pair.lead1.name.split(' ')[0]}</a>
-                <a href={`tel:${pair.lead2.phone}`} className="flex-1 bg-gray-900 text-white text-[11px] font-bold py-2 rounded-lg text-center active:scale-95 transition-transform">Call {pair.lead2.name.split(' ')[0]}</a>
+                <a href={`tel:${pair.lead1.phone}`} className="flex-1 bg-gray-900 hover:bg-black text-white text-xs font-bold min-h-[44px] py-2.5 px-2 rounded-xl flex items-center justify-center text-center active:scale-95 transition-transform shadow-xs">
+                  Call {pair.lead1.name.split(' ')[0]}
+                </a>
+                <a href={`tel:${pair.lead2.phone}`} className="flex-1 bg-gray-900 hover:bg-black text-white text-xs font-bold min-h-[44px] py-2.5 px-2 rounded-xl flex items-center justify-center text-center active:scale-95 transition-transform shadow-xs">
+                  Call {pair.lead2.name.split(' ')[0]}
+                </a>
             </div>
         </div>
       ))}

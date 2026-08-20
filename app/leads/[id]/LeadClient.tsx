@@ -55,7 +55,7 @@ export default function LeadClient({ dbLead, allLeads = [] }: { dbLead: any, all
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-50 p-6 text-center">
         <h1 className="text-2xl font-bold text-gray-400">Lead Not Found</h1>
-        <Link href="/" className="mt-4 text-blue-600 font-bold bg-blue-50 px-4 py-2 rounded-lg">Go Back Home</Link>
+        <Link href="/dashboard" className="mt-4 text-blue-600 font-bold bg-blue-50 px-4 py-2 rounded-lg">Go Back Home</Link>
       </div>
     );
   }
@@ -66,7 +66,7 @@ export default function LeadClient({ dbLead, allLeads = [] }: { dbLead: any, all
     if (window.confirm(`Are you sure you want to delete ${lead.name}? This cannot be undone.`)) {
       const result = await deleteLead(lead.id);
       if (result.success) {
-        router.push('/');
+        router.push('/dashboard');
       } else {
         alert("Error deleting lead.");
       }

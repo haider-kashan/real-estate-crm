@@ -39,7 +39,7 @@ export default function ProfileForm({ user }: { user: any }) {
       {/* Header */}
       <div className="sticky top-0 z-30 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-            <Link href="/" className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition">
+            <Link href="/dashboard" className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </Link>
             <h1 className="text-xl font-bold text-gray-900">Edit Profile</h1>

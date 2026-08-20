@@ -68,10 +68,10 @@ pnpm dev
 
 ---
 
-## The Team
+## Organization
 
-This system was architected and developed by a core team of three engineers, utilizing AI-assisted pair programming:
+This project is showcased by **Elevon Core** ([elevon-core.vercel.app](https://elevon-core.vercel.app/)), an organization showcasing projects built as a team.
 
-- **Mudassar Awan** - [Git Hub](https://github.com/mudassarawan01) - mudassarawan507@gmail.com
-- **Abdullah Hassan** - [Git Hub](https://github.com/Abdullah4806-iiui) - mabdullahhassan.dev@gmail.com
-- **Kashan Haider** - [Git Hub](https://github.com/haider-kashan) - thekashanhaider@gmail.com
+- **Organization Website:** [https://elevon-core.vercel.app/](https://elevon-core.vercel.app/)
+- **Contact Email:** [elevoncore@gmail.com](mailto:elevoncore@gmail.com)
+

@@ -163,7 +163,7 @@ export default async function AnalyticsPage() {
         </div>
 
         <div className="text-center mt-10">
-          <Link href="/" className="text-sm font-bold text-blue-600 hover:underline">
+          <Link href="/dashboard" className="text-sm font-bold text-blue-600 hover:underline">
             ← Back to Dashboard
           </Link>
         </div>
