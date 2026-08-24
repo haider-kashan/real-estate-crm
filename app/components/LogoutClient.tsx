@@ -1,18 +1,19 @@
 'use client';
 
 import { useEffect } from 'react';
-import { logout } from '../lib/auth-actions';
+import { useClerk } from '@clerk/nextjs';
 
 export default function LogoutClient() {
+  const { signOut } = useClerk();
+
   useEffect(() => {
-    // Automatically log out using the server action
-    logout();
-  }, []);
+    signOut({ redirectUrl: '/login' });
+  }, [signOut]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
       <div className="animate-pulse text-sm text-[#888888]">
-        Clearing expired session...
+        Signing out...
       </div>
     </div>
   );

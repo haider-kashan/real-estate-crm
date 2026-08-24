@@ -2,11 +2,21 @@
 
 import prisma from './prisma';
 import { revalidatePath } from 'next/cache';
+import { getAuthenticatedUserId } from './auth';
 
 // --- ACTION 1: UPDATE THE STICKY NOTE ---
-// Use this for general "remember this" information.
 export async function updateLeadStickyNote(leadId: number, content: string) {
   try {
+    const userId = await getAuthenticatedUserId();
+    
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+    });
+
+    if (!lead || lead.userId !== userId) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     await prisma.lead.update({
       where: { id: leadId },
       data: { notes: content }, // Saves to the flat string field
@@ -22,7 +32,6 @@ export async function updateLeadStickyNote(leadId: number, content: string) {
 }
 
 // --- ACTION 2: ADD AN ACTIVITY LOG ---
-// Use this when they log a call, meeting, or whatsapp finding.
 export async function addLeadActivityLog(
   leadId: number, 
   userId: string, 
@@ -30,17 +39,25 @@ export async function addLeadActivityLog(
   content: string
 ) {
   try {
+    const currentUserId = await getAuthenticatedUserId();
+    
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+    });
+
+    if (!lead || lead.userId !== currentUserId) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     await prisma.note.create({
       data: {
         leadId: leadId,
-        userId: userId,
+        userId: currentUserId,
         type: type,
         content: content,
-        // date: new Date() is added automatically by your schema!
       }
     });
 
-    // You can also automatically update the Lead's "lastContacted" date here!
     await prisma.lead.update({
       where: { id: leadId },
       data: { lastContacted: new Date() }

@@ -1,21 +1,17 @@
-import { auth } from '@/auth';
+import { requireDbUser } from '@/app/lib/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/app/lib/prisma';
 import HeaderBar from '@/app/components/HeaderBar';
 import FollowUpsClient from './FollowUpsClient';
 
 export default async function FollowUpsPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect('/');
-
-  // Get current date at exactly 23:59:59 to include everything due today or before
-  const todayEnd = new Date();
-  todayEnd.setHours(23, 59, 59, 999);
+  const dbUser = await requireDbUser();
+  if (!dbUser) redirect('/login');
 
   // Fetch leads that need a follow up
   const pendingFollowUps = await prisma.lead.findMany({
     where: { 
-      userId: session.user.id,
+      userId: dbUser.id,
       status: { notIn: ['closed', 'dead'] }, // Skip closed/dead deals
       followUp: {
         not: null
@@ -26,7 +22,10 @@ export default async function FollowUpsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-[100px] flex flex-col">
-      <HeaderBar user={session.user as any} title="Tasks" />
+      <HeaderBar 
+        user={{ name: dbUser.name || 'User', email: dbUser.email, logoUrl: dbUser.logoUrl }} 
+        title="Tasks" 
+      />
       
       <div className="px-4 py-4">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight">All Tasks</h1>

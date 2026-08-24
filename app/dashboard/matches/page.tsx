@@ -1,5 +1,7 @@
 import { getLeads } from '../../actions';
 import MatchesClient from './MatchesClient';
+import { requireDbUser } from '@/app/lib/auth';
+import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: 'Smart Matches | EstatePulse',
@@ -7,6 +9,9 @@ export const metadata = {
 };
 
 export default async function MatchesPage() {
+  const dbUser = await requireDbUser();
+  if (!dbUser) redirect('/login');
+
   const allLeads = await getLeads();
 
   return (

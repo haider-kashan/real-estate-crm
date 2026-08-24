@@ -9,32 +9,24 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(uuid())
-  email            String    @unique
-  password         String
+  id               String           @id
+  email            String           @unique
   name             String?
   phone            String?
   agencyName       String?
   agencyAddress    String?
   logoUrl          String?
-  plan             String    @default("free")
-  isActive         Boolean   @default(true)
+  plan             String           @default("free")
+  isActive         Boolean          @default(true)
   subscriptionEnds DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
   invoices         Invoice[]
   leads            Lead[]
   notes            Note[]
   analyticsEvents  AnalyticsEvent[]
-  isVerified       Boolean   @default(false)
-  verificationCode Int?
-  codeExpiresAt    DateTime?
-  dailyCodeCount   Int       @default(0)
-  lastCodeSentAt   DateTime?
-  failedLoginAttempts Int       @default(0)
-  lockoutUntil        DateTime?
-  isDemo              Boolean   @default(false)
-  isAssigned          Boolean   @default(false)
+  isDemo           Boolean          @default(false)
+  isAssigned       Boolean          @default(false)
 
   @@map("users")
 }
@@ -69,7 +61,7 @@ model Lead {
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   logs              Note[]
 
-  // --- NEW PERFORMANCE INDEXES ---
+  // --- PERFORMANCE INDEXES ---
   @@index([status])
   @@index([type])
   @@index([createdAt])
@@ -87,6 +79,7 @@ model Note {
   userId  String
   lead    Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("notes")
 }
 
@@ -112,7 +105,7 @@ model AnalyticsEvent {
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // --- NEW PERFORMANCE INDEX ---
+  // --- PERFORMANCE INDEXES ---
   @@index([eventName])
   @@index([userId])
 }

@@ -1,18 +1,17 @@
-import { auth } from '@/auth';
+import { requireDbUser } from '@/app/lib/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/app/lib/prisma';
 import HeaderBar from '@/app/components/HeaderBar';
 import PipelineClient from './PipelineClient';
 
 export default async function PipelinePage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect('/');
+  const dbUser = await requireDbUser();
+  if (!dbUser) redirect('/login');
 
   // Fetch all active leads for the Kanban board
   const leads = await prisma.lead.findMany({
     where: { 
-      userId: session.user.id,
-      // We exclude 'dead' if we want a clean pipeline
+      userId: dbUser.id,
       status: { not: 'dead' }
     },
     orderBy: { updatedAt: 'desc' }
@@ -20,7 +19,10 @@ export default async function PipelinePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-[100px] flex flex-col overflow-hidden">
-      <HeaderBar user={session.user as any} title="Pipeline" />
+      <HeaderBar 
+        user={{ name: dbUser.name || 'User', email: dbUser.email, logoUrl: dbUser.logoUrl }} 
+        title="Pipeline" 
+      />
       
       <div className="px-4 py-4 shrink-0">
         <h1 className="text-2xl font-black text-gray-900 tracking-tight">Pipeline</h1>

@@ -1,14 +1,14 @@
-import { auth } from '@/auth';
+import { requireDbUser } from '@/app/lib/auth';
 import { redirect } from 'next/navigation';
 import HeaderBar from '@/app/components/HeaderBar'; 
 import Link from 'next/link';
 import prisma from '../lib/prisma';
 
 export default async function AnalyticsPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect('/login');
+  const dbUser = await requireDbUser();
+  if (!dbUser) redirect('/login');
 
-  const userId = session.user.id;
+  const userId = dbUser.id;
 
   // 1. TIME PERIODS FOR GROWTH TRACKING
   const now = new Date();
@@ -40,6 +40,7 @@ export default async function AnalyticsPage() {
   const isGrowing = leadGrowth >= 0;
 
   // 4. HELPER TO FORMAT BREAKDOWNS
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getCount = (array: any[], key: string, val: string) => 
     array.find(item => item[key] === val)?._count?._all || 0;
 
@@ -55,8 +56,7 @@ export default async function AnalyticsPage() {
         title="My Analytics" 
         subtitle="Personal Performance Tracking"
         showBack={true} 
-        // @ts-expect-error - bypassing type check
-        user={{ name: session.user.name || 'User', email: session.user.email }}
+        user={{ name: dbUser.name || 'User', email: dbUser.email, logoUrl: dbUser.logoUrl }}
       />
 
       <div className="max-w-5xl mx-auto px-6 pt-10 space-y-8">

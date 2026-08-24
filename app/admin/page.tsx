@@ -1,14 +1,16 @@
 // app/admin/page.tsx
 import { redirect } from 'next/navigation';
-import { auth } from '../../auth';
+import { currentUser, auth } from '@clerk/nextjs/server';
 import prisma from '../lib/prisma'; 
 
 export default async function AdminDashboard() {
   // 1. STRICT SECURITY
-  const session = await auth();
-  const adminEmail = process.env.ADMIN_EMAIL; // <--- ⚠️ CHANGE THIS TO YOUR LOGIN EMAIL ⚠️
+  const { userId } = await auth();
+  const user = await currentUser();
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+  const adminEmail = process.env.ADMIN_EMAIL;
   
-  if (!session?.user || session.user.email !== adminEmail) {
+  if (!userId || !userEmail || userEmail !== adminEmail) {
     redirect('/');
   }
 
@@ -47,6 +49,7 @@ export default async function AdminDashboard() {
   const isGrowing = leadGrowth >= 0;
 
   // 5. HELPER TO FORMAT BREAKDOWNS
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getCount = (array: any[], key: string, val: string) => 
     array.find(item => item[key] === val)?._count?._all || 0;
 
@@ -117,7 +120,7 @@ export default async function AdminDashboard() {
             </div>
           </div>
 
-          {/* THE BOTTLENECK TRACKER IS BACK! */}
+          {/* THE BOTTLENECK TRACKER */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-5">Pipeline Bottlenecks</h2>
             <div className="space-y-4">

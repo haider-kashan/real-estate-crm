@@ -1,19 +1,13 @@
 'use server';
 
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
-import { auth } from '../auth';
+import { getAuthenticatedUserId } from './lib/auth';
 import prisma from './lib/prisma';
 import { sendFollowupScheduledAlert } from './lib/automation';
 
 // --- HELPER: GET CURRENT USER ID ---
 async function getUserId() {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    throw new Error('Unauthorized: Please login first.');
-  }
-
-  return session.user.id;
+  return await getAuthenticatedUserId();
 }
 
 // 1. GET LEADS (First 20 - Full Data)
@@ -124,6 +118,7 @@ export async function getLead(id: number) {
 }
 
 // 4. ADD LEAD
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function addLead(data: any) {
   try {
     const userId = await getUserId();
@@ -172,6 +167,7 @@ export async function addLead(data: any) {
 }
 
 // 5. UPDATE LEAD
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateLead(id: number, data: any) {
   try {
     const userId = await getUserId();
@@ -289,6 +285,15 @@ export async function trackEvent(eventName: string) {
 
 export async function updateInvoiceStatus(invoiceId: string, status: 'paid' | 'pending') {
   try {
+    const userId = await getUserId();
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId },
+    });
+
+    if (!invoice || invoice.userId !== userId) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
     await prisma.invoice.update({
       where: { id: invoiceId },
       data: { status: status },
