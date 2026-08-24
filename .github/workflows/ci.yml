@@ -28,36 +28,38 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
 
       # 3. Install pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 11
+          version: 10
 
-      # 5. Install dependencies
+      # 4. Install dependencies
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # 5. Generate Prisma Client
+      - name: Generate Prisma Client
+        run: pnpm exec prisma generate
+
       # 6. Run ESLint
       # TODO: Remove continue-on-error once pre-existing lint debt is resolved.
-      # Currently 71 pre-existing issues prevent lint from passing cleanly.
-      # Tracked for cleanup in a future PR.
       - name: Lint
         continue-on-error: true
         run: pnpm lint
 
       # 7. Build the project (catches TypeScript errors + Next.js issues)
-      # We provide dummy env vars so the build doesn't fail on missing secrets.
-      # The build step validates types and route correctness, not runtime behavior.
       - name: Build
         env:
           DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
           DIRECT_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
-          AUTH_SECRET: "ci-build-placeholder-secret-not-real"
-          AUTH_URL: "http://localhost:3000"
-          AUTH_TRUST_HOST: "true"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_ZGVlcC1mbG91bmRlci01OTAyLmNsZXJrLmFjY291bnRzLmRldiQ"
+          CLERK_SECRET_KEY: "sk_test_j9858FOF97I5KBCnIN8uK3mqV0cww2zZJFO5CAOJ9f"
+          NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/login"
+          NEXT_PUBLIC_CLERK_SIGN_OUT_URL: "/login"
+          NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
           ADMIN_EMAIL: "ci@placeholder.com"
           CRON_SECRET: "ci-placeholder"
         run: pnpm build
