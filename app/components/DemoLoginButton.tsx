@@ -30,25 +30,54 @@ export default function DemoLoginButton({ className, label }: DemoLoginButtonPro
         await signOut();
       }
 
-      // 3. Instant 1-click Clerk authentication (< 400ms)
+      // 3. Fast 1-click single-use ticket exchange with Clerk
+      try {
+        const res = await fetch('/api/demo-login', { method: 'POST' });
+        const data = await res.json();
+
+        if (data?.token && client?.signIn && setActive) {
+          const signInResult = await client.signIn.create({
+            strategy: 'ticket',
+            ticket: data.token,
+          });
+
+          if (signInResult.status === 'complete' && signInResult.createdSessionId) {
+            await setActive({ session: signInResult.createdSessionId });
+            window.location.href = '/dashboard';
+            return;
+          }
+        }
+      } catch (ticketErr) {
+        console.warn('Ticket exchange fallback:', ticketErr);
+      }
+
+      // 4. Fallback: direct password factor
       if (client?.signIn && setActive) {
-        const result = await client.signIn.create({
+        let attempt = await client.signIn.create({
           identifier: 'demo.agent@useestatepulse.com',
-          password: 'DemoEstatePulse2026!Secure',
         });
 
-        if (result.status === 'complete' && result.createdSessionId) {
-          await setActive({ session: result.createdSessionId });
+        if (attempt.status === 'needs_first_factor') {
+          attempt = await attempt.attemptFirstFactor({
+            strategy: 'password',
+            password: 'DemoEstatePulse2026!Secure',
+          });
+        }
+
+        if (attempt.status === 'complete' && attempt.createdSessionId) {
+          await setActive({ session: attempt.createdSessionId });
           window.location.href = '/dashboard';
           return;
         }
       }
 
-      // Fallback
+      // Fallback redirect
       window.location.href = '/dashboard';
     } catch (err: any) {
       console.error('Fast demo login error:', err);
-      window.location.href = '/dashboard';
+      window.location.href = '/login';
+    } finally {
+      setLoading(false);
     }
   };
 
