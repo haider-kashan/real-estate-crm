@@ -1,35 +1,64 @@
 import { NextResponse } from 'next/server';
 import { clerkClient } from '@clerk/nextjs/server';
+import prisma from '@/app/lib/prisma';
 
 export const dynamic = 'force-dynamic';
-
-const DEMO_USER_ID = 'user_3IMG5oxwSZ9D6nOWJAZWEcIeOgL';
-const DEMO_EMAIL = 'demo.agent@useestatepulse.com';
 
 /**
  * POST /api/demo-login
  *
- * Fast 1-click single-use sign-in ticket issuer for the demo account.
- * Response time: ~100ms.
+ * Allocates an available account from DemoAccountPool and generates
+ * a single-use Clerk sign-in ticket token.
  */
 export async function POST() {
   try {
-    const client = await clerkClient();
+    const clerk = await clerkClient();
 
-    // Generate single-use ticket token valid for 5 minutes
-    const token = await client.signInTokens.createSignInToken({
-      userId: DEMO_USER_ID,
+    // 1. Find an available demo account (inUse = false, or oldest lastAssigned)
+    let account = await prisma.demoAccountPool.findFirst({
+      where: { inUse: false },
+      orderBy: { lastAssigned: 'asc' },
+    });
+
+    // If all are currently marked inUse, pick the one assigned longest ago
+    if (!account) {
+      account = await prisma.demoAccountPool.findFirst({
+        orderBy: { lastAssigned: 'asc' },
+      });
+    }
+
+    if (!account) {
+      return NextResponse.json(
+        { success: false, error: 'No demo accounts available in pool. Please run reset-demos.' },
+        { status: 503 }
+      );
+    }
+
+    // 2. Mark account as inUse and update lastAssigned timestamp
+    await prisma.demoAccountPool.update({
+      where: { id: account.id },
+      data: {
+        inUse: true,
+        lastAssigned: new Date(),
+      },
+    });
+
+    // 3. Generate single-use ticket valid for 5 minutes
+    const signInToken = await clerk.signInTokens.createSignInToken({
+      userId: account.id,
       expiresInSeconds: 300,
     });
 
     return NextResponse.json({
       success: true,
-      token: token.token,
+      token: signInToken.token,
+      email: account.email,
+      userId: account.id,
     });
   } catch (error: any) {
-    console.error('[demo-login] Failed to generate demo ticket:', error);
+    console.error('[demo-login API] Error allocating demo account:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to generate demo session' },
+      { success: false, error: error.message || 'Failed to allocate demo account' },
       { status: 500 }
     );
   }

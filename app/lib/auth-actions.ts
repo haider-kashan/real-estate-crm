@@ -179,32 +179,28 @@ export async function seedDemoUserData(userId: string) {
 }
 
 /**
- * Resets all demo user accounts to pristine state (called by cron daily).
+ * Resets all demo user accounts in the Rotating Demo Pool to pristine state (called by cron nightly).
  */
 export async function resetDemoData() {
-  // 1. Clean up any legacy/ephemeral demo users
-  await prisma.user.deleteMany({
-    where: {
-      isDemo: true,
-      email: { not: 'demo.agent@useestatepulse.com' },
-    },
-  });
+  const poolAccounts = await prisma.demoAccountPool.findMany();
 
-  // 2. Find primary Demo user
-  const demoUser = await prisma.user.findFirst({
-    where: { isDemo: true, email: 'demo.agent@useestatepulse.com' },
-  });
-
-  if (demoUser) {
+  for (const account of poolAccounts) {
     // Delete existing demo leads, notes, invoices, and analytics
-    await prisma.analyticsEvent.deleteMany({ where: { userId: demoUser.id } });
-    await prisma.note.deleteMany({ where: { userId: demoUser.id } });
-    await prisma.invoice.deleteMany({ where: { userId: demoUser.id } });
-    await prisma.lead.deleteMany({ where: { userId: demoUser.id } });
+    await prisma.analyticsEvent.deleteMany({ where: { userId: account.id } });
+    await prisma.note.deleteMany({ where: { userId: account.id } });
+    await prisma.invoice.deleteMany({ where: { userId: account.id } });
+    await prisma.lead.deleteMany({ where: { userId: account.id } });
 
     // Reseed pristine demo dataset
-    await seedDemoUserData(demoUser.id);
+    await seedDemoUserData(account.id);
   }
+
+  // Reset inUse flags to false for all demo accounts
+  await prisma.demoAccountPool.updateMany({
+    data: {
+      inUse: false,
+    },
+  });
 }
 
 // Sandbox replenishment utility

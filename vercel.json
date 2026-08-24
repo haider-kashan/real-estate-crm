@@ -5,6 +5,10 @@
       "schedule": "0 12 * * *"
     },
     {
+      "path": "/api/cron/reset-demos",
+      "schedule": "0 0 * * *"
+    },
+    {
       "path": "/api/cron/cleanup-demo",
       "schedule": "0 0 * * *"
     },

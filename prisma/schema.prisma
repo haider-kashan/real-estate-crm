@@ -31,6 +31,15 @@ model User {
   @@map("users")
 }
 
+model DemoAccountPool {
+  id           String   @id // Mapping to Clerk userId (e.g. user_xxx)
+  email        String   @unique
+  inUse        Boolean  @default(false)
+  lastAssigned DateTime @default(now())
+
+  @@map("demo_account_pool")
+}
+
 model Lead {
   id                Int       @id @default(autoincrement())
   createdAt         DateTime  @default(now()) @map("created_at")
