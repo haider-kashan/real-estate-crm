@@ -1,12 +1,20 @@
 {
   "crons": [
     {
+      "path": "/api/keep-alive",
+      "schedule": "0 12 * * *"
+    },
+    {
       "path": "/api/cron/cleanup-demo",
       "schedule": "0 0 * * *"
     },
     {
       "path": "/api/cron/daily-briefing",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/monitor-health",
+      "schedule": "0 4 * * *"
     }
   ]
 }

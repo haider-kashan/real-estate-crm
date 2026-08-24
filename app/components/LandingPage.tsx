@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import DemoLoginButton from './DemoLoginButton';
 
 export type FeatureTabId = 
   | 'matching' 
@@ -147,12 +148,10 @@ export default function LandingPage() {
             <span>Open CRM Dashboard</span>
             <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded font-extrabold uppercase">Free Pilot</span>
           </Link>
-          <Link
-            href="/login?demo=true"
-            className="w-full sm:w-auto text-sm font-bold bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 px-6 py-3.5 min-h-[48px] rounded-xl shadow-xs active:scale-95 transition flex items-center justify-center"
-          >
-            🔑 Explore Demo Account
-          </Link>
+          <DemoLoginButton 
+            label="Explore Demo Sandbox"
+            className="w-full sm:w-auto text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 px-6 py-3.5 min-h-[48px] rounded-xl shadow-xs active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer"
+          />
         </div>
 
         {/* REAL APP UI HERO MOCKUP CARD (1:1 PARITY WITH LEADDASHBOARD) */}
@@ -837,12 +836,10 @@ export default function LandingPage() {
             >
               Launch CRM Dashboard
             </Link>
-            <Link
-              href="/login?demo=true"
-              className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm px-6 py-3.5 min-h-[48px] rounded-xl backdrop-blur-md active:scale-95 transition flex items-center justify-center"
-            >
-              🔑 Sandbox Demo Account
-            </Link>
+            <DemoLoginButton
+              label="Explore Demo Sandbox"
+              className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm px-6 py-3.5 min-h-[48px] rounded-xl backdrop-blur-md active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer border border-white/20"
+            />
           </div>
         </div>
       </section>
