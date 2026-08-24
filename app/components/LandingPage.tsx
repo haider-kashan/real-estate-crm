@@ -4,8 +4,19 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
+export type FeatureTabId = 
+  | 'matching' 
+  | 'hub' 
+  | 'health' 
+  | 'pipeline' 
+  | 'pricing' 
+  | 'reminders' 
+  | 'briefings' 
+  | 'analytics' 
+  | 'invoicing';
+
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState<'matching' | 'hub' | 'health' | 'pipeline' | 'pricing'>('matching');
+  const [activeTab, setActiveTab] = useState<FeatureTabId>('matching');
   const [demoPriceInput, setDemoPriceInput] = useState<string>('45000000');
 
   // Helper function to format Lakh/Crore Indian numbers
@@ -38,13 +49,17 @@ export default function LandingPage() {
     return str.trim() + ' Only';
   };
 
-  // List of features for sequential Next/Previous tab navigation
-  const tabsList: Array<{ id: 'matching' | 'hub' | 'health' | 'pipeline' | 'pricing'; label: string; shortLabel: string; icon: string }> = [
-    { id: 'matching', label: '✨ Algorithmic Matching', shortLabel: '✨ Matching', icon: '✨' },
-    { id: 'hub', label: '📱 Lead Hub & Logs', shortLabel: '📱 Lead Hub', icon: '📱' },
-    { id: 'health', label: '🟢 Health Scoring', shortLabel: '🟢 Health Score', icon: '🟢' },
-    { id: 'pipeline', label: '📋 Touch Pipeline', shortLabel: '📋 Pipeline', icon: '📋' },
-    { id: 'pricing', label: '🏷️ Lakh / Crore Engine', shortLabel: '🏷️ Price Engine', icon: '🏷️' },
+  // Complete List of 9 Lead Retention & CRM Features
+  const tabsList: Array<{ id: FeatureTabId; label: string; shortLabel: string; category: string }> = [
+    { id: 'matching', label: '✨ Algorithmic Matching', shortLabel: '✨ Matching', category: 'Core' },
+    { id: 'hub', label: '📱 Lead Hub & Logs', shortLabel: '📱 Lead Hub', category: 'Core' },
+    { id: 'health', label: '🟢 Health Scoring', shortLabel: '🟢 Health Score', category: 'Retention' },
+    { id: 'reminders', label: '⏰ Follow-Up Reminders', shortLabel: '⏰ Follow-Ups', category: 'Retention' },
+    { id: 'briefings', label: '📬 Morning Briefings', shortLabel: '📬 Briefings', category: 'Automation' },
+    { id: 'pipeline', label: '📋 Touch Pipeline', shortLabel: '📋 Pipeline', category: 'Pipeline' },
+    { id: 'analytics', label: '📊 Lead Analytics', shortLabel: '📊 Analytics', category: 'Intelligence' },
+    { id: 'pricing', label: '🏷️ Lakh / Crore Engine', shortLabel: '🏷️ Price Engine', category: 'Tools' },
+    { id: 'invoicing', label: '📄 Client PDF Invoices', shortLabel: '📄 Invoices', category: 'Financials' },
   ];
 
   const currentTabIndex = tabsList.findIndex((t) => t.id === activeTab);
@@ -107,20 +122,20 @@ export default function LandingPage() {
         {/* Pilot Pill */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold mb-4 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-          <span>SaaS Real Estate Lead Hub</span>
+          <span>Lead Retention & Real Estate SaaS</span>
         </div>
 
         {/* Headline */}
         <h1 className="text-2xl sm:text-5xl font-black tracking-tight text-gray-900 leading-[1.15] mb-3">
-          The High-Speed CRM for <br className="hidden sm:inline" />
+          Never Lose a Lead Again with <br className="hidden sm:inline" />
           <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent">
-            Real Estate Professionals
+            Proactive Retention Controls
           </span>
         </h1>
 
         {/* Subtitle */}
         <p className="text-xs sm:text-base text-gray-600 max-w-xl mx-auto mb-6 leading-relaxed font-medium px-2">
-          Centralize client leads, auto-match Buyers with Sellers, monitor lead health recency, and dispatch WhatsApp deal previews—built 100% for mobile speed.
+          Centralize client leads, auto-match Buyers with Sellers, monitor lead health staleness, trigger morning briefings, and enforce follow-up itineraries—built 100% for mobile speed.
         </p>
 
         {/* Action Buttons */}
@@ -293,32 +308,29 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CORE REAL ESTATE LEAD FEATURE SHOWCASE — HIGH-PERFORMANCE RESPONSIVE TABS */}
+      {/* CORE REAL ESTATE LEAD RETENTION FEATURE SHOWCASE */}
       <section className="px-3 py-8 max-w-4xl mx-auto">
         <div className="text-center mb-6">
           <span className="text-[10px] font-extrabold text-blue-700 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-            Core Real Estate CRM Capabilities
+            Proactive Lead Retention Suite
           </span>
           <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mt-2 mb-1">
-            Real App Features & Workflows
+            Real App Features & Retention Tools
           </h2>
           <p className="text-xs sm:text-sm text-gray-500 max-w-md mx-auto font-medium">
-            Select a feature below to view its live UI preview and workflow logic.
+            Explore all 9 built-in lead retention features, workflow engines, and automated alerts.
           </p>
         </div>
 
-        {/* RESPONSIVE TAB GRID NAVIGATION — 100% VISIBLE ON MOBILE (NO SCROLL NEEDED) */}
-        <div className="grid grid-cols-2 sm:flex sm:justify-center gap-2 mb-6 text-xs font-bold">
-          {tabsList.map((tab, idx) => {
+        {/* RESPONSIVE 9-TAB NAVIGATION GRID — 100% VISIBLE ON MOBILE & DESKTOP */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap md:justify-center gap-2 mb-6 text-xs font-bold">
+          {tabsList.map((tab) => {
             const isActive = activeTab === tab.id;
-            const isLastOddOnMobile = idx === tabsList.length - 1; // 5th item spans 2 cols on mobile grid
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-2.5 px-3 rounded-xl transition-all duration-150 flex items-center justify-center gap-1.5 min-h-[44px] text-center active:scale-95 ${
-                  isLastOddOnMobile ? 'col-span-2 sm:col-span-1' : ''
-                } ${
                   isActive
                     ? 'bg-gray-900 text-white shadow-md shadow-gray-900/10 ring-2 ring-gray-900 font-extrabold'
                     : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:border-gray-300'
@@ -471,7 +483,101 @@ export default function LandingPage() {
             </div>
           )}
 
-          {/* TAB 4: TOUCH KANBAN PIPELINE */}
+          {/* TAB 4: SMART FOLLOW-UP & OVERDUE TASK MANAGER */}
+          {activeTab === 'reminders' && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2 flex-wrap">
+                  <span>⏰ Smart Follow-Up & Overdue Task Manager</span>
+                  <span className="text-[10px] bg-red-50 text-red-700 px-2 py-0.5 rounded-full border border-red-100 font-extrabold">
+                    Retention Task Tracker
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Dedicated itinerary dashboard (`/dashboard/follow-ups`) flagging Overdue vs. Upcoming tasks with quick-date reschedulers and Mark Done triggers.
+                </p>
+              </div>
+
+              {/* REAL APP FOLLOWUPSCLIENT MOCKUP */}
+              <div className="space-y-2.5 bg-gray-50 p-3.5 rounded-2xl border border-gray-200">
+                <div className="p-3.5 rounded-xl border border-red-200 bg-red-50/40 relative overflow-hidden text-xs">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>
+                  <div className="pl-2 flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-gray-900 text-xs sm:text-sm">Zubair Khan</h4>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase mt-0.5">BUYER • CONTACTED</p>
+                      <p className="text-xs text-gray-600 mt-1 font-medium">DHA Phase 5 • PKR 5.5 Crore</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="bg-red-100 text-red-700 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase">Overdue</span>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">Yesterday</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex gap-2 pt-2 border-t border-red-100">
+                    <button className="flex-1 bg-gray-900 text-white font-bold py-2 rounded-lg text-center text-xs">Call Now</button>
+                    <button className="flex-1 bg-white border border-gray-200 font-bold text-gray-700 py-2 rounded-lg text-center text-xs">Mark Done</button>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-gray-200 bg-white relative overflow-hidden text-xs">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
+                  <div className="pl-2 flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-gray-900 text-xs sm:text-sm">Farhan Ali</h4>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase mt-0.5">SELLER • INTERESTED</p>
+                      <p className="text-xs text-gray-600 mt-1 font-medium">Johar Town • PKR 2.8 Crore</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="bg-blue-50 text-blue-600 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase">Upcoming</span>
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">Today, 2:00 PM</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: AUTOMATED MORNING BRIEFINGS */}
+          {activeTab === 'briefings' && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2 flex-wrap">
+                  <span>📬 Automated Morning Retention Briefings</span>
+                  <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-100 font-extrabold">
+                    8:00 AM Vercel Cron
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Serverless Cron workflows dispatching daily 8:00 AM email digests with scheduled itineraries, cooling lead retention alerts, and new buyer/seller matches.
+                </p>
+              </div>
+
+              {/* AUTOMATED BRIEFING EMAIL MOCKUP */}
+              <div className="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-800 text-xs space-y-3 font-sans">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📬</span>
+                    <div>
+                      <h4 className="font-extrabold text-white text-xs sm:text-sm">Daily Briefing — 8:00 AM Digest</h4>
+                      <p className="text-[10px] text-slate-400">Dispatched via Nodemailer cron engine</p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-extrabold bg-blue-500/20 text-blue-400 border border-blue-500/30">AUTOMATED</span>
+                </div>
+
+                <div className="space-y-2 text-slate-300">
+                  <p className="font-medium text-slate-200">Good morning, Agent! Here is your lead retention overview for today:</p>
+                  <ul className="space-y-1.5 pl-4 list-disc text-slate-300 text-[11px]">
+                    <li><strong className="text-white">3 Follow-Ups Scheduled:</strong> Zubair Khan, Farhan Ali, Imran Shah</li>
+                    <li><strong className="text-amber-400">2 Cooling Leads (Action Required):</strong> Bilal Ahmad (18d without contact)</li>
+                    <li><strong className="text-emerald-400">1 New Algorithmic Match:</strong> DHA Phase 6 Buyer ↔ Seller Pair</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: TOUCH KANBAN PIPELINE */}
           {activeTab === 'pipeline' && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div>
@@ -536,7 +642,45 @@ export default function LandingPage() {
             </div>
           )}
 
-          {/* TAB 5: LAKH & CRORE PRICING ENGINE */}
+          {/* TAB 7: LEAD ANALYTICS & EVENT TRACKING */}
+          {activeTab === 'analytics' && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2 flex-wrap">
+                  <span>📊 Lead Retention Analytics & Activity Event Tracking</span>
+                  <span className="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full border border-purple-100 font-extrabold">
+                    Prisma AnalyticsEvent
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Tracks agent outreach and lead engagement metrics (`click_call`, `click_whatsapp`, `mark_contacted`, `set_reminder`) to measure conversion velocity.
+                </p>
+              </div>
+
+              {/* ANALYTICS METRICS CARDS MOCKUP */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-gray-50 p-3.5 rounded-2xl border border-gray-200 text-xs">
+                <div className="bg-white p-3 rounded-xl border border-gray-200 text-center">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">Call Triggers</p>
+                  <p className="text-lg font-extrabold text-gray-900 mt-0.5">142</p>
+                  <span className="text-[9px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded">+18% this month</span>
+                </div>
+
+                <div className="bg-white p-3 rounded-xl border border-gray-200 text-center">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">WhatsApp Outreaches</p>
+                  <p className="text-lg font-extrabold text-gray-900 mt-0.5">289</p>
+                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">+34% this month</span>
+                </div>
+
+                <div className="bg-white p-3 rounded-xl border border-gray-200 text-center col-span-2 sm:col-span-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">Lead Retention Rate</p>
+                  <p className="text-lg font-extrabold text-blue-600 mt-0.5">92.4%</p>
+                  <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">High Conversion</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 8: LAKH & CRORE PRICING ENGINE */}
           {activeTab === 'pricing' && (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div>
@@ -575,23 +719,55 @@ export default function LandingPage() {
             </div>
           )}
 
+          {/* TAB 9: CLIENT PDF INVOICING */}
+          {activeTab === 'invoicing' && (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2 flex-wrap">
+                  <span>📄 Client PDF Invoicing & Financial Logs</span>
+                  <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-100 font-extrabold">
+                    @react-pdf/renderer
+                  </span>
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Generates branded client commission receipt PDFs directly in the browser with Optimistic UI status updates (`Pending` ↔ `Paid`).
+                </p>
+              </div>
+
+              {/* INVOICE CARD MOCKUP */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-3">
+                <div className="bg-white p-3.5 rounded-xl border border-gray-200 flex justify-between items-center">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">Invoice #INV-2026-08</span>
+                    <h4 className="font-extrabold text-gray-900 text-xs sm:text-sm mt-0.5">Commission Receipt — DHA Plot Deal</h4>
+                    <p className="text-[11px] font-bold text-blue-600 mt-1">PKR 900,000 (Nine Lakh Only)</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase">PAID</span>
+                    <button className="block text-[10px] font-bold text-gray-900 underline mt-2">Download PDF 📄</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* IN-CARD SUB-NAVIGATION FOOTER (STEP PREVIOUS / NEXT FEATURE) */}
           <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-gray-500">
             <button
               onClick={goToPrevTab}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 min-h-[40px] transition active:scale-95"
+              className="flex items-center gap-1 px-3.5 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 min-h-[40px] transition active:scale-95 border border-gray-200"
             >
               <span>←</span>
               <span>Previous</span>
             </button>
 
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] font-extrabold text-gray-400">
               Feature {currentTabIndex + 1} of {tabsList.length}
             </span>
 
             <button
               onClick={goToNextTab}
-              className="flex items-center gap-1 px-3 py-2 rounded-xl bg-gray-900 hover:bg-black text-white min-h-[40px] transition active:scale-95 shadow-xs"
+              className="flex items-center gap-1 px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-black text-white min-h-[40px] transition active:scale-95 shadow-xs"
             >
               <span>Next</span>
               <span>→</span>
