@@ -5,18 +5,23 @@ import { sendDailyBriefing } from '@/app/lib/automation';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  // Security: Vercel sends a specific header or we can use our CRON_SECRET
+  // Security: Check Bearer token or ?key param
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const url = new URL(request.url);
+  const keyParam = url.searchParams.get('key');
+
+  const isAuthorized =
+    !process.env.CRON_SECRET ||
+    authHeader === `Bearer ${process.env.CRON_SECRET}` ||
+    keyParam === process.env.CRON_SECRET;
+
+  if (!isAuthorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     // 1. Fetch all users
     const users = await prisma.user.findMany();
-
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
 
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);

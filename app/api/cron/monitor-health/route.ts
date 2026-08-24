@@ -2,10 +2,20 @@ import { NextResponse } from 'next/server';
 import prisma from '@/app/lib/prisma';
 import { sendNaggingAlert, sendHealthDropAlert, sendFollowupReminder } from '@/app/lib/automation';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   // 1. Validate the CRON trigger (Security)
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const url = new URL(request.url);
+  const keyParam = url.searchParams.get('key');
+
+  const isAuthorized =
+    !process.env.CRON_SECRET ||
+    authHeader === `Bearer ${process.env.CRON_SECRET}` ||
+    keyParam === process.env.CRON_SECRET;
+
+  if (!isAuthorized) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -30,7 +40,6 @@ export async function GET(request: Request) {
       const userName = user.name || 'Agent';
 
       // --- A. THE NAGGING OVERDUE ALERTS ---
-      // followUp < startOfToday
       const overdueLeads = await prisma.lead.findMany({
         where: {
           userId: user.id,
@@ -40,11 +49,10 @@ export async function GET(request: Request) {
       });
 
       for (const lead of overdueLeads) {
-        await sendNaggingAlert(user.email, userName, lead);
+        await sendNaggingAlert(user.email, userName, lead).catch(console.error);
       }
 
       // --- B. THE TODAY FOLLOW-UP REMINDERS ---
-      // followUp >= startOfToday AND followUp <= endOfToday
       const todayLeads = await prisma.lead.findMany({
         where: {
           userId: user.id,
@@ -57,21 +65,20 @@ export async function GET(request: Request) {
       });
 
       for (const lead of todayLeads) {
-        await sendFollowupReminder(user.email, userName, lead);
+        await sendFollowupReminder(user.email, userName, lead).catch(console.error);
       }
 
       // --- C. THE HEALTH DROP ALERTS ---
-      // lastContacted < sevenDaysAgo
       const rottingLeads = await prisma.lead.findMany({
         where: {
           userId: user.id,
-          status: { notIn: ['closed', 'lost'] }, // ignore if closed or lost
+          status: { notIn: ['closed', 'lost'] },
           lastContacted: { lt: sevenDaysAgo }
         }
       });
 
       for (const lead of rottingLeads) {
-        await sendHealthDropAlert(user.email, userName, lead);
+        await sendHealthDropAlert(user.email, userName, lead).catch(console.error);
       }
     }
 

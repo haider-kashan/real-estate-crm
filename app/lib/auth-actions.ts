@@ -74,23 +74,54 @@ export async function getOrCreateDemoSignInUrl(): Promise<string> {
   }
 
   // 2. Ensure Demo User exists in PostgreSQL Database
-  const dbUser = await prisma.user.upsert({
-    where: { id: clerkDemoUser.id },
-    update: {
-      isDemo: true,
-    },
-    create: {
-      id: clerkDemoUser.id,
-      email: demoEmail,
-      name: 'Demo Agent',
-      agencyName: 'EstatePulse Demo Realty',
-      agencyAddress: '742 Evergreen Terrace, Suite 100',
-      logoUrl: clerkDemoUser.imageUrl || null,
-      plan: 'pro',
-      isDemo: true,
-      isAssigned: false,
+  let dbUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { id: clerkDemoUser.id },
+        { email: demoEmail },
+      ],
     },
   });
+
+  if (dbUser) {
+    if (dbUser.id !== clerkDemoUser.id) {
+      // Clean up old demo user record (cascades old leads/notes/invoices)
+      await prisma.user.delete({ where: { id: dbUser.id } });
+
+      dbUser = await prisma.user.create({
+        data: {
+          id: clerkDemoUser.id,
+          email: demoEmail,
+          name: 'Demo Agent',
+          agencyName: 'EstatePulse Demo Realty',
+          agencyAddress: '742 Evergreen Terrace, Suite 100',
+          logoUrl: clerkDemoUser.imageUrl || null,
+          plan: 'pro',
+          isDemo: true,
+          isAssigned: false,
+        },
+      });
+    } else {
+      dbUser = await prisma.user.update({
+        where: { id: clerkDemoUser.id },
+        data: { isDemo: true },
+      });
+    }
+  } else {
+    dbUser = await prisma.user.create({
+      data: {
+        id: clerkDemoUser.id,
+        email: demoEmail,
+        name: 'Demo Agent',
+        agencyName: 'EstatePulse Demo Realty',
+        agencyAddress: '742 Evergreen Terrace, Suite 100',
+        logoUrl: clerkDemoUser.imageUrl || null,
+        plan: 'pro',
+        isDemo: true,
+        isAssigned: false,
+      },
+    });
+  }
 
   // 3. Ensure Demo leads and analytics exist
   const existingLeads = await prisma.lead.count({
@@ -151,19 +182,28 @@ export async function seedDemoUserData(userId: string) {
  * Resets all demo user accounts to pristine state (called by cron daily).
  */
 export async function resetDemoData() {
-  const demoUsers = await prisma.user.findMany({
-    where: { isDemo: true },
+  // 1. Clean up any legacy/ephemeral demo users
+  await prisma.user.deleteMany({
+    where: {
+      isDemo: true,
+      email: { not: 'demo.agent@useestatepulse.com' },
+    },
   });
 
-  for (const user of demoUsers) {
+  // 2. Find primary Demo user
+  const demoUser = await prisma.user.findFirst({
+    where: { isDemo: true, email: 'demo.agent@useestatepulse.com' },
+  });
+
+  if (demoUser) {
     // Delete existing demo leads, notes, invoices, and analytics
-    await prisma.analyticsEvent.deleteMany({ where: { userId: user.id } });
-    await prisma.note.deleteMany({ where: { userId: user.id } });
-    await prisma.invoice.deleteMany({ where: { userId: user.id } });
-    await prisma.lead.deleteMany({ where: { userId: user.id } });
+    await prisma.analyticsEvent.deleteMany({ where: { userId: demoUser.id } });
+    await prisma.note.deleteMany({ where: { userId: demoUser.id } });
+    await prisma.invoice.deleteMany({ where: { userId: demoUser.id } });
+    await prisma.lead.deleteMany({ where: { userId: demoUser.id } });
 
     // Reseed pristine demo dataset
-    await seedDemoUserData(user.id);
+    await seedDemoUserData(demoUser.id);
   }
 }
 
