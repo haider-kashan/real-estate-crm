@@ -37,6 +37,29 @@ export async function requireDbUser() {
   });
 
   if (existingByEmail) {
+    if (existingByEmail.id !== userId) {
+      // Re-link existing database records to the current Clerk user ID
+      await prisma.lead.updateMany({ where: { userId: existingByEmail.id }, data: { userId } });
+      await prisma.note.updateMany({ where: { userId: existingByEmail.id }, data: { userId } });
+      await prisma.invoice.updateMany({ where: { userId: existingByEmail.id }, data: { userId } });
+      await prisma.analyticsEvent.updateMany({ where: { userId: existingByEmail.id }, data: { userId } });
+      await prisma.user.delete({ where: { id: existingByEmail.id } });
+
+      dbUser = await prisma.user.create({
+        data: {
+          id: userId,
+          email,
+          name: existingByEmail.name || name,
+          logoUrl: existingByEmail.logoUrl || logoUrl,
+          agencyName: existingByEmail.agencyName,
+          agencyAddress: existingByEmail.agencyAddress,
+          phone: existingByEmail.phone,
+          plan: existingByEmail.plan,
+          isDemo: existingByEmail.isDemo || email === 'demo.agent@useestatepulse.com',
+        },
+      });
+      return dbUser;
+    }
     return existingByEmail;
   }
 
@@ -48,6 +71,7 @@ export async function requireDbUser() {
       name,
       logoUrl,
       plan: 'free',
+      isDemo: email === 'demo.agent@useestatepulse.com',
     },
   });
 

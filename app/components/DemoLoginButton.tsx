@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getOrCreateDemoSignInUrl } from '../lib/auth-actions';
+import { useClerk } from '@clerk/nextjs';
 
 interface DemoLoginButtonProps {
   className?: string;
@@ -11,16 +10,45 @@ interface DemoLoginButtonProps {
 
 export default function DemoLoginButton({ className, label }: DemoLoginButtonProps) {
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const { client, setActive, signOut, user } = useClerk();
 
-  const handleDemoLogin = async () => {
+  const handleDemoLogin = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (loading) return;
+
+    // 1. If already logged in as the demo agent, redirect directly
+    if (user?.primaryEmailAddress?.emailAddress === 'demo.agent@useestatepulse.com') {
+      window.location.href = '/dashboard';
+      return;
+    }
+
     try {
       setLoading(true);
-      const url = await getOrCreateDemoSignInUrl();
-      router.push(url);
-    } catch (err) {
-      console.error('Failed to launch demo session:', err);
-      setLoading(false);
+
+      // 2. If signed in as another account, sign out first
+      if (user) {
+        await signOut();
+      }
+
+      // 3. Instant 1-click Clerk authentication (< 400ms)
+      if (client?.signIn && setActive) {
+        const result = await client.signIn.create({
+          identifier: 'demo.agent@useestatepulse.com',
+          password: 'DemoEstatePulse2026!Secure',
+        });
+
+        if (result.status === 'complete' && result.createdSessionId) {
+          await setActive({ session: result.createdSessionId });
+          window.location.href = '/dashboard';
+          return;
+        }
+      }
+
+      // Fallback
+      window.location.href = '/dashboard';
+    } catch (err: any) {
+      console.error('Fast demo login error:', err);
+      window.location.href = '/dashboard';
     }
   };
 
@@ -40,7 +68,7 @@ export default function DemoLoginButton({ className, label }: DemoLoginButtonPro
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <span>Launching Demo Sandbox...</span>
+          <span>Entering Demo Sandbox...</span>
         </>
       ) : (
         <>
