@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import BottomNav from './components/BottomNav';
-import { ClerkProvider } from '@clerk/nextjs';
-import { auth } from '@clerk/nextjs/server';
+import { ClerkProvider, Show } from '@clerk/nextjs';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,19 +18,19 @@ export const viewport = {
   userScalable: false,
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { userId } = await auth();
-
   return (
     <html lang="en">
       <body className={`${inter.className} pb-0`}>
         <ClerkProvider>
           {children}
-          {userId && <BottomNav />}
+          <Show when="signed-in">
+            <BottomNav />
+          </Show>
         </ClerkProvider>
       </body>
     </html>
