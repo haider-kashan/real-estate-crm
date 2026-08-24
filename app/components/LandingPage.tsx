@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState<'matching' | 'hub' | 'health' | 'pipeline' | 'pricing'>('matching');
   const [demoPriceInput, setDemoPriceInput] = useState<string>('45000000');
 
   // Helper function to format Lakh/Crore Indian numbers
@@ -102,7 +101,7 @@ export default function LandingPage() {
           Centralize client leads, auto-match Buyers with Sellers, monitor lead health recency, and dispatch WhatsApp deal previews—built 100% for mobile speed.
         </p>
 
-        {/* Action Buttons (Enforced 44px Minimum Touch Targets) */}
+        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-8 px-2">
           <Link
             href="/dashboard"
@@ -272,313 +271,253 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CORE REAL ESTATE LEAD FEATURE SHOWCASE */}
-      <section className="px-3 py-8 max-w-4xl mx-auto">
-        <div className="text-center mb-6">
+      {/* CORE REAL ESTATE LEAD FEATURE SHOWCASE — CONTINUOUS VERTICAL FLOW */}
+      <section className="px-3 py-10 max-w-4xl mx-auto">
+        <div className="text-center mb-10">
           <span className="text-[10px] font-extrabold text-blue-700 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
             Core Real Estate CRM Capabilities
           </span>
-          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mt-2 mb-1">
+          <h2 className="text-2xl sm:text-4xl font-black text-gray-900 mt-2 mb-2">
             Real App Features & Workflows
           </h2>
-          <p className="text-xs sm:text-sm text-gray-500 max-w-md mx-auto font-medium">
-            Explore the exact lead management features built into the EstatePulse CRM.
+          <p className="text-xs sm:text-base text-gray-600 max-w-lg mx-auto font-medium">
+            Explore all lead management features built directly into EstatePulse in a single seamless view.
           </p>
         </div>
 
-        {/* Tab Selector (Scrollable Horizontal Container on Mobile) */}
-        <div className="w-full overflow-x-auto whitespace-nowrap scrollbar-none pb-2 mb-6 flex gap-2 justify-start sm:justify-center text-xs font-extrabold px-1">
-          <button
-            onClick={() => setActiveTab('matching')}
-            className={`px-4 py-2.5 rounded-xl transition-all shrink-0 min-h-[44px] ${
-              activeTab === 'matching'
-                ? 'bg-gray-900 text-white shadow-md'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            ✨ Algorithmic Matching
-          </button>
-          <button
-            onClick={() => setActiveTab('hub')}
-            className={`px-4 py-2.5 rounded-xl transition-all shrink-0 min-h-[44px] ${
-              activeTab === 'hub'
-                ? 'bg-gray-900 text-white shadow-md'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            📱 Centralized Lead Hub
-          </button>
-          <button
-            onClick={() => setActiveTab('health')}
-            className={`px-4 py-2.5 rounded-xl transition-all shrink-0 min-h-[44px] ${
-              activeTab === 'health'
-                ? 'bg-gray-900 text-white shadow-md'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            🟢 Lead Health Scoring
-          </button>
-          <button
-            onClick={() => setActiveTab('pipeline')}
-            className={`px-4 py-2.5 rounded-xl transition-all shrink-0 min-h-[44px] ${
-              activeTab === 'pipeline'
-                ? 'bg-gray-900 text-white shadow-md'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            📋 Touch Kanban Pipeline
-          </button>
-          <button
-            onClick={() => setActiveTab('pricing')}
-            className={`px-4 py-2.5 rounded-xl transition-all shrink-0 min-h-[44px] ${
-              activeTab === 'pricing'
-                ? 'bg-gray-900 text-white shadow-md'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            🏷️ Lakh / Crore Engine
-          </button>
-        </div>
+        {/* VERTICAL FEATURE SHOWCASE CARDS — NO SCROLL TABS */}
+        <div className="space-y-8">
+          
+          {/* FEATURE 1: ALGORITHMIC MATCHING */}
+          <div className="bg-white rounded-3xl p-5 sm:p-7 border border-gray-200 shadow-md">
+            <div className="mb-4">
+              <h3 className="text-base sm:text-xl font-extrabold text-gray-900 flex items-center gap-2 flex-wrap">
+                <span>✨ Algorithmic Lead Matching Engine</span>
+                <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-100 font-extrabold">
+                  findLeadMatches()
+                </span>
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed font-medium">
+                Scans database to automatically pair Buyer ↔ Seller and Tenant ↔ Landlord leads based on location, property type, and a ±15% price margin tolerance.
+              </p>
+            </div>
 
-        {/* Tab Showcase Card */}
-        <div className="bg-white rounded-3xl p-4 sm:p-7 border border-gray-200 shadow-md">
-          {activeTab === 'matching' && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2 flex-wrap">
-                  <span>✨ Smart Lead Matching Engine</span>
-                  <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-100 font-extrabold">
-                    findLeadMatches()
-                  </span>
-                </h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Scans database to automatically pair Buyer ↔ Seller and Tenant ↔ Landlord leads based on location, property type, and a ±15% price margin tolerance.
-                </p>
+            <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-xs border border-gray-100 relative overflow-hidden">
+              <div className="mb-3 text-center">
+                <span className="inline-block bg-amber-50 text-amber-800 text-[10px] sm:text-xs font-extrabold px-3 py-1.5 rounded-full border border-amber-200 shadow-2xs leading-tight">
+                  ✨ Location + Property Type + Price (15% margin)
+                </span>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row justify-between items-stretch gap-2.5 sm:gap-4">
+                <div className="flex-1 bg-gray-50/80 rounded-xl p-3 border border-transparent hover:border-blue-100 transition-colors">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 block mb-1">BUYER</span>
+                  <h4 className="font-bold text-gray-900 text-xs sm:text-sm">Abdullah Hassan</h4>
+                  <p className="text-xs text-gray-500">DHA Phase 6 • 1 Kanal</p>
+                  <p className="text-xs font-bold text-gray-900 mt-1.5">PKR 45,000,000</p>
+                </div>
+
+                <div className="flex-1 bg-gray-50/80 rounded-xl p-3 text-left sm:text-right border border-transparent hover:border-purple-100 transition-colors">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 block mb-1">SELLER</span>
+                  <h4 className="font-bold text-gray-900 text-xs sm:text-sm">Mudassar Awan</h4>
+                  <p className="text-xs text-gray-500">DHA Phase 6 • 1 Kanal</p>
+                  <p className="text-xs font-bold text-gray-900 mt-1.5">PKR 46,500,000</p>
+                </div>
               </div>
 
-              {/* REAL APP MATCHESCLIENT UI MOCKUP (RESPONSIVE NON-OVERLAY BADGE) */}
-              <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-xs border border-gray-100 relative overflow-hidden">
-                <div className="mb-3 text-center">
-                  <span className="inline-block bg-amber-50 text-amber-800 text-[10px] sm:text-xs font-extrabold px-3 py-1.5 rounded-full border border-amber-200 shadow-2xs leading-tight">
-                    ✨ Location + Property Type + Price (15% margin)
-                  </span>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row justify-between items-stretch gap-2.5 sm:gap-4">
-                  {/* Lead 1: Buyer */}
-                  <div className="flex-1 bg-gray-50/80 rounded-xl p-3 border border-transparent hover:border-blue-100 transition-colors">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 block mb-1">BUYER</span>
-                    <h4 className="font-bold text-gray-900 text-xs">Abdullah Hassan</h4>
-                    <p className="text-xs text-gray-500">DHA Phase 6 • 1 Kanal</p>
-                    <p className="text-xs font-bold text-gray-900 mt-1.5">PKR 45,000,000</p>
-                  </div>
+              <div className="mt-3 flex gap-2">
+                <div className="flex-1 bg-gray-900 text-white text-xs font-bold py-2.5 min-h-[44px] flex items-center justify-center rounded-xl text-center cursor-pointer active:scale-95 transition-transform">Call Abdullah</div>
+                <div className="flex-1 bg-gray-900 text-white text-xs font-bold py-2.5 min-h-[44px] flex items-center justify-center rounded-xl text-center cursor-pointer active:scale-95 transition-transform">Call Mudassar</div>
+              </div>
+            </div>
+          </div>
 
-                  {/* Lead 2: Seller */}
-                  <div className="flex-1 bg-gray-50/80 rounded-xl p-3 text-left sm:text-right border border-transparent hover:border-purple-100 transition-colors">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 block mb-1">SELLER</span>
-                    <h4 className="font-bold text-gray-900 text-xs">Mudassar Awan</h4>
-                    <p className="text-xs text-gray-500">DHA Phase 6 • 1 Kanal</p>
-                    <p className="text-xs font-bold text-gray-900 mt-1.5">PKR 46,500,000</p>
-                  </div>
-                </div>
+          {/* FEATURE 2: CENTRALIZED LEAD HUB & DUAL LOGGING */}
+          <div className="bg-white rounded-3xl p-5 sm:p-7 border border-gray-200 shadow-md">
+            <div className="mb-4">
+              <h3 className="text-base sm:text-xl font-extrabold text-gray-900">📱 Centralized Lead Hub & Dual Logging</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed font-medium">
+                Static sticky notes for remarks + chronological activity timeline logs (calls, meetings, WhatsApp notes).
+              </p>
+            </div>
 
-                <div className="mt-3 flex gap-2">
-                  <div className="flex-1 bg-gray-900 text-white text-xs font-bold py-2.5 min-h-[44px] flex items-center justify-center rounded-xl text-center cursor-pointer active:scale-95 transition-transform">Call Abdullah</div>
-                  <div className="flex-1 bg-gray-900 text-white text-xs font-bold py-2.5 min-h-[44px] flex items-center justify-center rounded-xl text-center cursor-pointer active:scale-95 transition-transform">Call Mudassar</div>
+            <div className="bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-200 text-xs space-y-3">
+              <div className="flex justify-between items-center border-b border-slate-200 pb-2.5 font-bold text-gray-900">
+                <span className="text-xs sm:text-sm">Lead Detail: Gulberg Commercial Plot</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-green-100 text-green-700 uppercase">NEW</span>
+              </div>
+              
+              <div className="bg-white p-3 sm:p-4 rounded-xl border border-gray-200 text-xs">
+                <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">📌 Sticky Notes</p>
+                <p className="text-gray-700 font-medium leading-relaxed">Looking for main road plot, basement required, cash client ready to advance.</p>
+              </div>
+
+              <div className="bg-white p-3 sm:p-4 rounded-xl border border-gray-200 text-xs space-y-2.5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">📜 Activity Timeline Logs</p>
+                <div className="flex flex-col sm:flex-row sm:justify-between text-gray-600 text-xs gap-1">
+                  <span>📞 <strong>Call Completed:</strong> Scheduled site visit</span>
+                  <span className="text-gray-400 text-[10px]">Today, 09:15 AM</span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:justify-between text-gray-600 text-xs gap-1">
+                  <span>💬 <strong>WhatsApp Sent:</strong> Property brochure PDF dispatched</span>
+                  <span className="text-gray-400 text-[10px]">Yesterday</span>
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
-          {activeTab === 'hub' && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900">📱 Centralized Lead Hub & Dual Logging</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Static sticky notes for remarks + chronological activity timeline logs (calls, meetings, WhatsApp notes).
-                </p>
+          {/* FEATURE 3: LEAD HEALTH SCORING */}
+          <div className="bg-white rounded-3xl p-5 sm:p-7 border border-gray-200 shadow-md">
+            <div className="mb-4">
+              <h3 className="text-base sm:text-xl font-extrabold text-gray-900">🟢 Automated Lead Health Scoring Engine</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed font-medium">
+                Calculates staleness from <code>lastContacted</code> date to flag cooling leads with visual health indicators.
+              </p>
+            </div>
+
+            <div className="space-y-3 bg-gray-50 p-3.5 sm:p-4 rounded-2xl border border-gray-200">
+              <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between text-xs gap-2">
+                <div className="flex items-center gap-2 font-bold text-gray-900 truncate">
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white shadow-xs shrink-0"></div>
+                  <span className="truncate">Kashan Haider (2d ago)</span>
+                </div>
+                <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded border border-green-100 shrink-0">
+                  Healthy (100%)
+                </span>
               </div>
 
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs space-y-2.5">
-                <div className="flex justify-between items-center border-b border-slate-200 pb-2 font-bold text-gray-900">
-                  <span>Lead Detail: Gulberg Commercial Plot</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 uppercase">NEW</span>
+              <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between text-xs gap-2">
+                <div className="flex items-center gap-2 font-bold text-gray-900 truncate">
+                  <div className="w-2.5 h-2.5 rounded-full bg-orange-500 border-2 border-white shadow-xs shrink-0"></div>
+                  <span className="truncate">Usman Tariq (10d ago)</span>
                 </div>
-                
-                <div className="bg-white p-3 rounded-xl border border-gray-200 text-xs">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">📌 Sticky Notes</p>
-                  <p className="text-gray-700 font-medium leading-relaxed">Looking for main road plot, basement required, cash client ready to advance.</p>
-                </div>
+                <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-100 shrink-0">
+                  Warning (50%)
+                </span>
+              </div>
 
-                <div className="bg-white p-3 rounded-xl border border-gray-200 text-xs space-y-2">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">📜 Activity Timeline Logs</p>
-                  <div className="flex flex-col sm:flex-row sm:justify-between text-gray-600 text-xs gap-1">
-                    <span>📞 <strong>Call Completed:</strong> Scheduled site visit</span>
-                    <span className="text-gray-400 text-[10px]">Today, 09:15 AM</span>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between text-gray-600 text-xs gap-1">
-                    <span>💬 <strong>WhatsApp Sent:</strong> Property brochure PDF dispatched</span>
-                    <span className="text-gray-400 text-[10px]">Yesterday</span>
-                  </div>
+              <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between text-xs gap-2">
+                <div className="flex items-center gap-2 font-bold text-gray-900 truncate">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-600 border-2 border-white shadow-xs animate-pulse shrink-0"></div>
+                  <span className="truncate">Bilal Ahmad (18d ago)</span>
+                </div>
+                <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 shrink-0">
+                  Critical (5%)
+                </span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-xl border border-gray-200 mt-3">
+                <div className="flex justify-between items-center mb-1 text-xs">
+                  <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Overall Lead Health Score Bar</span>
+                  <span className="font-bold text-green-600 text-xs">Healthy (75%)</span>
+                </div>
+                <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-green-500 rounded-full" style={{ width: '75%' }}></div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
-          {activeTab === 'health' && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900">🟢 Automated Lead Health Scoring Engine</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Calculates staleness from <code>lastContacted</code> date to flag cooling leads with visual health indicators.
-                </p>
+          {/* FEATURE 4: TOUCH KANBAN PIPELINE */}
+          <div className="bg-white rounded-3xl p-5 sm:p-7 border border-gray-200 shadow-md">
+            <div className="mb-4">
+              <h3 className="text-base sm:text-xl font-extrabold text-gray-900">📋 Touch-Optimized Kanban Pipeline</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed font-medium">
+                Mobile drag-and-drop pipeline stages with optimistic state updates and fallback quick-move dropdowns.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
+              <div className="bg-gray-200/50 p-2.5 rounded-xl border border-gray-200">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold text-gray-900 text-[10px]">New Leads</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800">2</span>
+                </div>
+                <div className="bg-white p-2 rounded-lg shadow-2xs font-bold text-gray-900 text-[10px]">
+                  Bahria Town Buyer
+                  <div className="text-[9px] text-gray-500 mt-1 font-normal">PKR 3.5 Crore</div>
+                </div>
               </div>
 
-              <div className="space-y-3 bg-gray-50 p-3.5 sm:p-4 rounded-2xl border border-gray-200">
-                <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between text-xs gap-2">
-                  <div className="flex items-center gap-2 font-bold text-gray-900 truncate">
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white shadow-xs shrink-0"></div>
-                    <span className="truncate">Kashan Haider (2d ago)</span>
-                  </div>
-                  <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded border border-green-100 shrink-0">
-                    Healthy (100%)
-                  </span>
+              <div className="bg-gray-200/50 p-2.5 rounded-xl border border-gray-200">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold text-gray-900 text-[10px]">Contacted</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800">1</span>
                 </div>
-
-                <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between text-xs gap-2">
-                  <div className="flex items-center gap-2 font-bold text-gray-900 truncate">
-                    <div className="w-2.5 h-2.5 rounded-full bg-orange-500 border-2 border-white shadow-xs shrink-0"></div>
-                    <span className="truncate">Usman Tariq (10d ago)</span>
-                  </div>
-                  <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-100 shrink-0">
-                    Warning (50%)
-                  </span>
+                <div className="bg-white p-2 rounded-lg shadow-2xs font-bold text-gray-900 text-[10px]">
+                  Gulberg Office
                 </div>
+              </div>
 
-                <div className="bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between text-xs gap-2">
-                  <div className="flex items-center gap-2 font-bold text-gray-900 truncate">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-600 border-2 border-white shadow-xs animate-pulse shrink-0"></div>
-                    <span className="truncate">Bilal Ahmad (18d ago)</span>
-                  </div>
-                  <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 shrink-0">
-                    Critical (5%)
-                  </span>
+              <div className="bg-gray-200/50 p-2.5 rounded-xl border border-gray-200">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold text-gray-900 text-[10px]">Interested</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-800">3</span>
                 </div>
+                <div className="bg-white p-2 rounded-lg shadow-2xs font-bold text-gray-900 text-[10px]">
+                  DHA Phase 5 House
+                </div>
+              </div>
 
-                <div className="bg-white p-3 rounded-xl border border-gray-200 mt-3">
-                  <div className="flex justify-between items-center mb-1 text-xs">
-                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px]">Overall Lead Health Bar</span>
-                    <span className="font-bold text-green-600 text-xs">Healthy (75%)</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500 rounded-full" style={{ width: '75%' }}></div>
-                  </div>
+              <div className="bg-gray-200/50 p-2.5 rounded-xl border border-gray-200">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold text-gray-900 text-[10px]">Negotiation</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800">1</span>
+                </div>
+                <div className="bg-white p-2 rounded-lg shadow-2xs font-bold text-gray-900 text-[10px]">
+                  Johar Commercial
+                </div>
+              </div>
+
+              <div className="bg-gray-200/50 p-2.5 rounded-xl border border-gray-200 col-span-2 sm:col-span-1">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold text-gray-900 text-[10px]">Closed (Won)</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">4</span>
+                </div>
+                <div className="bg-white p-2 rounded-lg shadow-2xs font-bold text-gray-900 text-[10px]">
+                  Model Town Villa
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
-          {activeTab === 'pipeline' && (
-            <div className="space-y-4">
+          {/* FEATURE 5: LAKH & CRORE PRICING ENGINE */}
+          <div className="bg-white rounded-3xl p-5 sm:p-7 border border-gray-200 shadow-md">
+            <div className="mb-4">
+              <h3 className="text-base sm:text-xl font-extrabold text-gray-900">🏷️ South Asian Lakh & Crore Pricing Engine</h3>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed font-medium">
+                Prevents critical data entry mistakes on high-value real estate listings via live calculation functions.
+              </p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-3 text-xs">
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900">📋 Touch-Optimized Kanban Pipeline</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Mobile drag-and-drop pipeline stages with optimistic state updates and fallback quick-move dropdowns.
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Interactive Price Input (PKR):</label>
+                <input
+                  type="text"
+                  value={demoPriceInput}
+                  onChange={(e) => setDemoPriceInput(e.target.value)}
+                  className="w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-900 font-mono font-bold focus:ring-2 focus:ring-black outline-none min-h-[44px]"
+                  placeholder="Enter digits (e.g. 45000000)"
+                />
+              </div>
+
+              <div className="flex justify-between items-center font-bold bg-white p-3 rounded-xl border border-gray-200">
+                <span className="text-gray-600">Formatted Price Display:</span>
+                <span className="text-gray-900 font-extrabold text-sm sm:text-base">
+                  {formatIndianNumber(demoPriceInput) || '0'}
+                </span>
+              </div>
+
+              <div className="bg-white p-3 rounded-xl border border-gray-200">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Words Output:</p>
+                <p className="text-xs sm:text-sm font-bold text-blue-600 mt-0.5">
+                  {numberToWordsIndian(demoPriceInput) || 'Enter amount'}
                 </p>
               </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
-                <div className="bg-gray-200/50 p-2 rounded-xl border border-gray-200">
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="font-bold text-gray-900 text-[10px]">New Leads</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800">2</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-lg shadow-2xs font-bold text-gray-900 text-[10px]">
-                    Bahria Town Buyer
-                    <div className="text-[9px] text-gray-500 mt-1 font-normal">PKR 3.5 Crore</div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-200/50 p-2 rounded-xl border border-gray-200">
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="font-bold text-gray-900 text-[10px]">Contacted</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800">1</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-lg shadow-2xs font-bold text-gray-900 text-[10px]">
-                    Gulberg Office
-                  </div>
-                </div>
-
-                <div className="bg-gray-200/50 p-2 rounded-xl border border-gray-200">
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="font-bold text-gray-900 text-[10px]">Interested</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-800">3</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-lg shadow-2xs font-bold text-gray-900 text-[10px]">
-                    DHA Phase 5 House
-                  </div>
-                </div>
-
-                <div className="bg-gray-200/50 p-2 rounded-xl border border-gray-200">
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="font-bold text-gray-900 text-[10px]">Negotiation</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800">1</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-lg shadow-2xs font-bold text-gray-900 text-[10px]">
-                    Johar Commercial
-                  </div>
-                </div>
-
-                <div className="bg-gray-200/50 p-2 rounded-xl border border-gray-200 col-span-2 sm:col-span-1">
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="font-bold text-gray-900 text-[10px]">Closed (Won)</span>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-100 text-green-800">4</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-lg shadow-2xs font-bold text-gray-900 text-[10px]">
-                    Model Town Villa
-                  </div>
-                </div>
-              </div>
             </div>
-          )}
+          </div>
 
-          {activeTab === 'pricing' && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900">🏷️ South Asian Lakh & Crore Pricing Engine</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Prevents critical data entry mistakes on high-value real estate listings via live calculation functions.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-3 text-xs">
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Interactive Price Input (PKR):</label>
-                  <input
-                    type="text"
-                    value={demoPriceInput}
-                    onChange={(e) => setDemoPriceInput(e.target.value)}
-                    className="w-full p-3 bg-white border border-gray-300 rounded-xl text-gray-900 font-mono font-bold focus:ring-2 focus:ring-black outline-none min-h-[44px]"
-                    placeholder="Enter digits (e.g. 45000000)"
-                  />
-                </div>
-
-                <div className="flex justify-between items-center font-bold bg-white p-3 rounded-xl border border-gray-200">
-                  <span className="text-gray-600">Formatted Price Display:</span>
-                  <span className="text-gray-900 font-extrabold text-sm sm:text-base">
-                    {formatIndianNumber(demoPriceInput) || '0'}
-                  </span>
-                </div>
-
-                <div className="bg-white p-3 rounded-xl border border-gray-200">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase">Words Output:</p>
-                  <p className="text-xs sm:text-sm font-bold text-blue-600 mt-0.5">
-                    {numberToWordsIndian(demoPriceInput) || 'Enter amount'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
