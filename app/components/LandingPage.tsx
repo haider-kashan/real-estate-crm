@@ -777,35 +777,35 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SECONDARY SHOWCASE: INVOICING, AUTOMATIONS & TECH */}
+      {/* SECONDARY SHOWCASE: HIGH-PERFORMANCE TECH & ARCHITECTURE (NO REPETITION OF TAB FEATURES) */}
       <section className="px-4 py-10 max-w-4xl mx-auto border-t border-gray-200 mt-6">
         <div className="text-center mb-8">
           <span className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest bg-gray-100 px-3 py-1 rounded-full">
-            Infrastructure & Automations
+            Engineering & Infrastructure
           </span>
           <h2 className="text-xl sm:text-2xl font-black text-gray-900 mt-2">
-            Invoicing, Automations & Tech Stack
+            Next.js App Router Architecture & Security
           </h2>
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4">
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-xs">
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-base mb-2">
-              📄
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base mb-2">
+              ⚡
             </div>
-            <h3 className="font-bold text-gray-900 text-xs mb-1">In-Browser PDF Invoices</h3>
+            <h3 className="font-bold text-gray-900 text-xs mb-1">Optimistic UI State Actions</h3>
             <p className="text-xs text-gray-500 leading-relaxed">
-              Dynamically renders client-side commission receipt PDFs using <code>@react-pdf/renderer</code> with agency logo branding.
+              Instant UI re-renders backed by Next.js Server Actions mutating PostgreSQL in the background.
             </p>
           </div>
 
           <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-xs">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-base mb-2">
-              🌅
+            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-base mb-2">
+              🐘
             </div>
-            <h3 className="font-bold text-gray-900 text-xs mb-1">8:00 AM Daily Briefings</h3>
+            <h3 className="font-bold text-gray-900 text-xs mb-1">Supabase & Prisma ORM</h3>
             <p className="text-xs text-gray-500 leading-relaxed">
-              Vercel Cron dispatches automated morning itinerary briefing emails and follow-up reminders via Nodemailer.
+              Strict schema definitions with high-performance indexes on lead status, types, and analytics logs.
             </p>
           </div>
 
@@ -813,9 +813,9 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-base mb-2">
               🔒
             </div>
-            <h3 className="font-bold text-gray-900 text-xs mb-1">Closed-Pilot Security</h3>
+            <h3 className="font-bold text-gray-900 text-xs mb-1">NextAuth v5 Security</h3>
             <p className="text-xs text-gray-500 leading-relaxed">
-              NextAuth.js v5 session security with Google OAuth interceptors mapping string IDs to strict PostgreSQL UUIDs.
+              Google OAuth interceptors mapping string IDs to strict PostgreSQL UUIDs with dynamic host headers.
             </p>
           </div>
         </div>
