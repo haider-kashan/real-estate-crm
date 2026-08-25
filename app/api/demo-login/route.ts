@@ -54,24 +54,48 @@ async function resolveClerkDemoUser(
     create: { id: validUserId, email, inUse: true, lastAssigned: new Date() },
   });
 
-  // 5. Synchronize User record in database
-  const dbUser = await prisma.user.upsert({
-    where: { id: validUserId },
-    update: { email, name: 'Demo Agent', isDemo: true },
-    create: {
-      id: validUserId,
-      email,
-      name: 'Demo Agent',
-      agencyName: 'EstatePulse Demo Agency',
-      isDemo: true,
-      plan: 'pro',
-    },
+  // 5. Synchronize User record in database (handle unique email constraint when ID changes)
+  const existingUserByEmail = await prisma.user.findUnique({
+    where: { email },
   });
 
+  if (existingUserByEmail) {
+    if (existingUserByEmail.id !== validUserId) {
+      // Re-link existing database records to the current Clerk user ID
+      await prisma.lead.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
+      await prisma.note.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
+      await prisma.invoice.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
+      await prisma.analyticsEvent.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
+      await prisma.user.delete({ where: { id: existingUserByEmail.id } });
+
+      await prisma.user.create({
+        data: {
+          id: validUserId,
+          email,
+          name: existingUserByEmail.name || 'Demo Agent',
+          agencyName: existingUserByEmail.agencyName || 'EstatePulse Demo Agency',
+          isDemo: true,
+          plan: 'pro',
+        },
+      });
+    }
+  } else {
+    await prisma.user.create({
+      data: {
+        id: validUserId,
+        email,
+        name: 'Demo Agent',
+        agencyName: 'EstatePulse Demo Agency',
+        isDemo: true,
+        plan: 'pro',
+      },
+    });
+  }
+
   // 6. Ensure sample leads and analytics exist
-  const leadCount = await prisma.lead.count({ where: { userId: dbUser.id } });
+  const leadCount = await prisma.lead.count({ where: { userId: validUserId } });
   if (leadCount === 0) {
-    await seedDemoUserData(dbUser.id);
+    await seedDemoUserData(validUserId);
   }
 
   return validUserId;
