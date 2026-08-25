@@ -54,20 +54,20 @@ async function resolveClerkDemoUser(
     create: { id: validUserId, email, inUse: true, lastAssigned: new Date() },
   });
 
-  // 5. Synchronize User record in database (handle unique email constraint when ID changes)
+  // 5. Synchronize User record in database
   const existingUserByEmail = await prisma.user.findUnique({
     where: { email },
   });
 
   if (existingUserByEmail) {
     if (existingUserByEmail.id !== validUserId) {
-      // Re-link existing database records to the current Clerk user ID
-      await prisma.lead.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
-      await prisma.note.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
-      await prisma.invoice.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
-      await prisma.analyticsEvent.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
-      await prisma.user.delete({ where: { id: existingUserByEmail.id } });
+      // A. Temporarily free up the unique email
+      await prisma.user.update({
+        where: { id: existingUserByEmail.id },
+        data: { email: `temp_${Date.now()}_${email}` },
+      });
 
+      // B. Create the new user with valid Clerk userId
       await prisma.user.create({
         data: {
           id: validUserId,
@@ -78,18 +78,30 @@ async function resolveClerkDemoUser(
           plan: 'pro',
         },
       });
+
+      // C. Re-link child relations
+      await prisma.lead.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
+      await prisma.note.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
+      await prisma.invoice.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
+      await prisma.analyticsEvent.updateMany({ where: { userId: existingUserByEmail.id }, data: { userId: validUserId } });
+
+      // D. Clean up temporary old user
+      await prisma.user.delete({ where: { id: existingUserByEmail.id } });
     }
   } else {
-    await prisma.user.create({
-      data: {
-        id: validUserId,
-        email,
-        name: 'Demo Agent',
-        agencyName: 'EstatePulse Demo Agency',
-        isDemo: true,
-        plan: 'pro',
-      },
-    });
+    const existingById = await prisma.user.findUnique({ where: { id: validUserId } });
+    if (!existingById) {
+      await prisma.user.create({
+        data: {
+          id: validUserId,
+          email,
+          name: 'Demo Agent',
+          agencyName: 'EstatePulse Demo Agency',
+          isDemo: true,
+          plan: 'pro',
+        },
+      });
+    }
   }
 
   // 6. Ensure sample leads and analytics exist
