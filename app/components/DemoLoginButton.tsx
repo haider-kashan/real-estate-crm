@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 interface DemoLoginButtonProps {
   className?: string;
   label?: string;
+  wrapperClassName?: string;
 }
 
-export default function DemoLoginButton({ className, label }: DemoLoginButtonProps) {
+export default function DemoLoginButton({ className, label, wrapperClassName }: DemoLoginButtonProps) {
   const [loading, setLoading] = useState(false);
   const [statusText, setStatusText] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -78,7 +79,7 @@ export default function DemoLoginButton({ className, label }: DemoLoginButtonPro
   };
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <div className={wrapperClassName || "w-full flex flex-col items-center"}>
       <button
         type="button"
         onClick={handleDemoLogin}

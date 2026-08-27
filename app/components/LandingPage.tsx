@@ -80,7 +80,7 @@ export default function LandingPage() {
       
       {/* REAL APP HEADER NAVBAR */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 px-3 py-3 sm:px-6 shadow-xs">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image 
               src="/logo.png" 
@@ -118,192 +118,224 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* HERO SECTION WITH REAL APP MOCKUP */}
-      <section className="px-3 pt-6 pb-10 sm:pt-14 sm:pb-16 max-w-4xl mx-auto text-center">
-        {/* Pilot Pill */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold mb-4 shadow-2xs">
-          <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-          <span>Lead Retention & Real Estate SaaS</span>
-        </div>
-
-        {/* Headline */}
-        <h1 className="text-2xl sm:text-5xl font-black tracking-tight text-gray-900 leading-[1.15] mb-3">
-          Never Lose a Lead Again with <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent">
-            Proactive Retention Controls
-          </span>
-        </h1>
-
-        {/* Subtitle */}
-        <p className="text-xs sm:text-base text-gray-600 max-w-xl mx-auto mb-6 leading-relaxed font-medium px-2">
-          Centralize client leads, auto-match Buyers with Sellers, monitor lead health staleness, trigger morning briefings, and enforce follow-up itineraries—built 100% for mobile speed.
-        </p>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mb-8 px-2">
-          <Link
-            href="/dashboard"
-            className="w-full sm:w-auto text-sm font-bold bg-gray-900 hover:bg-black text-white px-6 py-3.5 min-h-[48px] rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            <span>Open CRM Dashboard</span>
-            <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded font-extrabold uppercase">Free Pilot</span>
-          </Link>
-          <DemoLoginButton 
-            label="Explore Demo Sandbox"
-            className="w-full sm:w-auto text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 px-6 py-3.5 min-h-[48px] rounded-xl shadow-xs active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer"
-          />
-        </div>
-
-        {/* REAL APP UI HERO MOCKUP CARD (1:1 PARITY WITH LEADDASHBOARD) */}
-        <div className="relative max-w-sm mx-auto bg-white rounded-3xl p-3 sm:p-4 shadow-xl border border-gray-200 text-left overflow-hidden">
+      {/* HERO SECTION WITH 2-COLUMN SPLIT LAYOUT */}
+      <section className="px-4 sm:px-6 lg:px-8 pt-8 pb-12 sm:pt-14 sm:pb-16 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12 items-center">
           
-          {/* HeaderBar Component Mockup */}
-          <div className="flex justify-between items-center pb-2.5 mb-2.5 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <Image src="/logo.png" alt="EstatePulse Logo" width={24} height={24} className="object-contain" />
-              <div>
-                <h3 className="text-xs font-bold text-gray-900">EstatePulse</h3>
-                <p className="text-[10px] text-gray-400 font-medium">14 Active Leads</p>
-              </div>
+          {/* LEFT COLUMN: Written Content & Action Buttons */}
+          <div className="lg:col-span-6 xl:col-span-7 flex flex-col items-start text-left">
+            {/* Pilot Pill */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold mb-4 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+              <span>Lead Retention & Real Estate SaaS</span>
             </div>
 
-            {/* Real HeaderBar Action Buttons */}
-            <div className="flex items-center gap-1.5">
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600" title="Search">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              </div>
+            {/* Headline */}
+            <h1 className="text-3xl sm:text-5xl lg:text-[44px] xl:text-5xl font-black tracking-tight text-gray-900 leading-[1.12] mb-4">
+              Never Lose a Lead Again with{' '}
+              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 bg-clip-text text-transparent">
+                Proactive Retention Controls
+              </span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed font-medium max-w-xl">
+              Centralize client leads, auto-match Buyers with Sellers, monitor lead health staleness, trigger morning briefings, and enforce follow-up itineraries—built 100% for mobile speed.
+            </p>
+
+            {/* Action Buttons (Black Sign Up + Orange Demo Button) */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mb-6">
+              <Link
+                href="/sign-up"
+                className="w-full sm:w-auto text-sm font-bold bg-gray-900 hover:bg-black text-white px-6 py-3.5 min-h-[48px] rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                <span>Sign Up Free</span>
+                <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded font-extrabold uppercase">Pilot</span>
+              </Link>
+              <DemoLoginButton 
+                label="Explore Demo Sandbox"
+                wrapperClassName="w-full sm:w-auto"
+                className="w-full sm:w-auto text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 px-6 py-3.5 min-h-[48px] rounded-xl shadow-xs active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+              />
+            </div>
+
+            {/* Micro-Features / Trust Signals */}
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs font-semibold text-gray-500 pt-2 border-t border-gray-100 w-full">
+              <span className="flex items-center gap-1.5 text-emerald-700">
+                <svg className="w-4 h-4 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Instant 1-Click Demo
+              </span>
+              <span className="flex items-center gap-1.5 text-gray-600">
+                <svg className="w-4 h-4 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Zero Credit Card Required
+              </span>
+              <span className="flex items-center gap-1.5 text-gray-600">
+                <svg className="w-4 h-4 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                </svg>
+                Mobile Optimized CRM
+              </span>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: Interactive Real App UI Mockup ("The Picture") */}
+          <div className="lg:col-span-6 xl:col-span-5 w-full flex justify-center lg:justify-end">
+            <div className="relative w-full max-w-sm sm:max-w-md bg-white rounded-3xl p-3.5 sm:p-4 shadow-2xl border border-gray-200/90 text-left overflow-hidden ring-1 ring-black/5">
               
-              {/* Notification Center with Red Badge */}
-              <div className="relative w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-extrabold flex items-center justify-center">2</span>
-              </div>
-
-              {/* Filter Button */}
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600" title="Filter">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-              </div>
-
-              {/* Add Lead Circle Button */}
-              <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow-xs" title="Add Lead">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Department Tabs Bar */}
-          <div className="flex border-b border-gray-100 text-xs font-bold text-gray-500 mb-2">
-            <span className="flex-1 py-1.5 text-center text-gray-900 border-b-2 border-gray-900">All</span>
-            <span className="flex-1 py-1.5 text-center hover:text-gray-900">Sales</span>
-            <span className="flex-1 py-1.5 text-center hover:text-gray-900">Rentals</span>
-          </div>
-
-          {/* Real App Status Pills Bar */}
-          <div className="flex gap-1 overflow-x-auto pb-2 mb-2 scrollbar-none text-xs font-bold">
-            <span className="bg-gray-900 text-white px-3 py-1 rounded-full whitespace-nowrap shadow-xs">all (14)</span>
-            <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full whitespace-nowrap">new</span>
-            <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full whitespace-nowrap">contacted</span>
-            <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full whitespace-nowrap">interested</span>
-          </div>
-
-          {/* REAL APP LEAD CARD 1 (BUYER) */}
-          <div className="block bg-white p-3 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 relative overflow-hidden mb-2">
-            {/* Real Left Accent Bar - Blue for Buyer */}
-            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
-            
-            <div className="flex justify-between items-start pl-2.5">
-              <div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm">Kashan Haider</h3>
-                  <span className="px-1.5 py-0.5 rounded border text-[9px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-700 border-blue-100">
-                    BUYER
-                  </span>
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white shadow-xs" title="Health: Healthy (2d)"></div>
+              {/* HeaderBar Component Mockup */}
+              <div className="flex justify-between items-center pb-2.5 mb-2.5 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <Image src="/logo.png" alt="EstatePulse Logo" width={24} height={24} className="object-contain" />
+                  <div>
+                    <h3 className="text-xs font-bold text-gray-900">EstatePulse</h3>
+                    <p className="text-[10px] text-gray-400 font-medium">14 Active Leads</p>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-1 text-xs text-gray-500 mt-1 font-medium">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                  <span>DHA Phase 6</span>
-                  <span className="text-gray-300">|</span>
-                  <span>1 Kanal Plot</span>
+                {/* Real HeaderBar Action Buttons */}
+                <div className="flex items-center gap-1.5">
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600" title="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  </div>
+                  
+                  {/* Notification Center with Red Badge */}
+                  <div className="relative w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-extrabold flex items-center justify-center">2</span>
+                  </div>
+
+                  {/* Filter Button */}
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600" title="Filter">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                  </div>
+
+                  {/* Add Lead Circle Button */}
+                  <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shadow-xs" title="Add Lead">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  </div>
                 </div>
               </div>
 
-              {/* Action Triggers */}
-              <div className="flex flex-col items-end gap-1">
-                <div className="flex gap-1">
-                  <div className="flex items-center justify-center gap-1 px-2.5 py-1.5 bg-gray-900 rounded-lg text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                    <span className="text-[10px] font-bold">Call</span>
+              {/* Department Tabs Bar */}
+              <div className="flex border-b border-gray-100 text-xs font-bold text-gray-500 mb-2">
+                <span className="flex-1 py-1.5 text-center text-gray-900 border-b-2 border-gray-900">All</span>
+                <span className="flex-1 py-1.5 text-center hover:text-gray-900">Sales</span>
+                <span className="flex-1 py-1.5 text-center hover:text-gray-900">Rentals</span>
+              </div>
+
+              {/* Real App Status Pills Bar */}
+              <div className="flex gap-1 overflow-x-auto pb-2 mb-2 scrollbar-none text-xs font-bold">
+                <span className="bg-gray-900 text-white px-3 py-1 rounded-full whitespace-nowrap shadow-xs">all (14)</span>
+                <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full whitespace-nowrap">new</span>
+                <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full whitespace-nowrap">contacted</span>
+                <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full whitespace-nowrap">interested</span>
+              </div>
+
+              {/* REAL APP LEAD CARD 1 (BUYER) */}
+              <div className="block bg-white p-3 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 relative overflow-hidden mb-2">
+                {/* Real Left Accent Bar - Blue for Buyer */}
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
+                
+                <div className="flex justify-between items-start pl-2.5">
+                  <div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="font-extrabold text-gray-900 text-xs sm:text-sm">Kashan Haider</h3>
+                      <span className="px-1.5 py-0.5 rounded border text-[9px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-700 border-blue-100">
+                        BUYER
+                      </span>
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white shadow-xs" title="Health: Healthy (2d)"></div>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-xs text-gray-500 mt-1 font-medium">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                      <span>DHA Phase 6</span>
+                      <span className="text-gray-300">|</span>
+                      <span>1 Kanal Plot</span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-center gap-1 px-2.5 py-1.5 bg-[#25D366] rounded-lg text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                    <span className="text-[10px] font-bold">WhatsApp</span>
+
+                  {/* Action Triggers */}
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex gap-1">
+                      <div className="flex items-center justify-center gap-1 px-2.5 py-1.5 bg-gray-900 rounded-lg text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        <span className="text-[10px] font-bold">Call</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-1 px-2.5 py-1.5 bg-[#25D366] rounded-lg text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                        <span className="text-[10px] font-bold">WhatsApp</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase bg-green-100 text-green-700">NEW</span>
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-lg border border-amber-100 shadow-2xs">
+                        ✨ 3 Matches
+                      </span>
+                    </div>
                   </div>
+                </div>
+
+                <hr className="border-gray-50 ml-2.5 my-2" />
+
+                <div className="bg-gray-50 p-2 rounded-lg ml-2.5">
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Budget Range</p>
+                  <p className="font-extrabold text-xs sm:text-sm text-gray-900">45,000,000</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5 leading-tight">Four Crore Fifty Lakh Only</p>
+                </div>
+              </div>
+
+              {/* REAL APP BOTTOM NAVIGATION (6 TABS) */}
+              <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-100 text-[10px] font-bold text-gray-400">
+                <div className="flex flex-col items-center text-gray-900">
+                  <div className="p-1 px-2 rounded-full bg-gray-900 text-white shadow-xs mb-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                  </div>
+                  <span className="text-[9px]">Dashboard</span>
                 </div>
                 
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase bg-green-100 text-green-700">NEW</span>
-                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-lg border border-amber-100 shadow-2xs">
-                    ✨ 3 Matches
-                  </span>
+                <div className="flex flex-col items-center">
+                  <div className="p-1 px-2 rounded-full text-gray-400 mb-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                  </div>
+                  <span className="text-[9px]">Sales</span>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <div className="p-1 px-2 rounded-full text-gray-400 mb-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"></path></svg>
+                  </div>
+                  <span className="text-[9px]">Rentals</span>
+                </div>
+
+                <div className="flex flex-col items-center text-orange-500">
+                  <div className="p-1 px-2 rounded-full text-gray-400 mb-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+                  </div>
+                  <span className="text-[9px]">Pipeline</span>
+                </div>
+
+                <div className="flex flex-col items-center text-red-500">
+                  <div className="p-1 px-2 rounded-full text-gray-400 mb-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                  </div>
+                  <span className="text-[9px]">Tasks</span>
+                </div>
+
+                <div className="flex flex-col items-center text-amber-500">
+                  <div className="p-1 px-2 rounded-full text-gray-400 mb-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
+                  </div>
+                  <span className="text-[9px]">Matches</span>
                 </div>
               </div>
             </div>
-
-            <hr className="border-gray-50 ml-2.5 my-2" />
-
-            <div className="bg-gray-50 p-2 rounded-lg ml-2.5">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Budget Range</p>
-              <p className="font-extrabold text-xs sm:text-sm text-gray-900">45,000,000</p>
-              <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5 leading-tight">Four Crore Fifty Lakh Only</p>
-            </div>
           </div>
 
-          {/* REAL APP BOTTOM NAVIGATION (6 TABS) */}
-          <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-100 text-[10px] font-bold text-gray-400">
-            <div className="flex flex-col items-center text-gray-900">
-              <div className="p-1 px-2 rounded-full bg-gray-900 text-white shadow-xs mb-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-              </div>
-              <span className="text-[9px]">Dashboard</span>
-            </div>
-            
-            <div className="flex flex-col items-center">
-              <div className="p-1 px-2 rounded-full text-gray-400 mb-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-              </div>
-              <span className="text-[9px]">Sales</span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="p-1 px-2 rounded-full text-gray-400 mb-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"></path></svg>
-              </div>
-              <span className="text-[9px]">Rentals</span>
-            </div>
-
-            <div className="flex flex-col items-center text-orange-500">
-              <div className="p-1 px-2 rounded-full text-gray-400 mb-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
-              </div>
-              <span className="text-[9px]">Pipeline</span>
-            </div>
-
-            <div className="flex flex-col items-center text-red-500">
-              <div className="p-1 px-2 rounded-full text-gray-400 mb-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-              </div>
-              <span className="text-[9px]">Tasks</span>
-            </div>
-
-            <div className="flex flex-col items-center text-amber-500">
-              <div className="p-1 px-2 rounded-full text-gray-400 mb-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg>
-              </div>
-              <span className="text-[9px]">Matches</span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -838,7 +870,8 @@ export default function LandingPage() {
             </Link>
             <DemoLoginButton
               label="Explore Demo Sandbox"
-              className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm px-6 py-3.5 min-h-[48px] rounded-xl backdrop-blur-md active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer border border-white/20"
+              wrapperClassName="w-full sm:w-auto"
+              className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm px-6 py-3.5 min-h-[48px] rounded-xl backdrop-blur-md active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer border border-white/20"
             />
           </div>
         </div>
